@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Umut Sandviç Evi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>UMUT SANDVİÇ EVİ<small>Bursa · Ulucami Cd.</small></h1>
+    <div class="stats">
+      <div>Gün <b id="sDay">1</b> <span id="sWeather" title="Hava">☀️</span></div>
+      <div>🕗 <b id="sClock">08:00</b></div>
+      <div>💰 <b id="sMoney">₺0</b></div>
+      <div>⭐ <b id="sRep">3.0</b></div>
+    </div>
+    <div class="hbtns">
+      <button id="bookBtn" title="Müşteri defteri">📒 Defter</button>
+      <button id="setBtn" title="Kayıt">⚙</button>
+      <span class="sep"></span>
+      <button data-sp="0" title="Duraklat (0)">⏸</button>
+      <button data-sp="1" class="on" title="Normal (1)">1x</button>
+      <button data-sp="2" title="Hızlı (2)">2x</button>
+      <button data-sp="4" title="Çok hızlı (3)">4x</button>
+    </div>
+  </header>
+
+  <div id="stage">
+    <canvas id="scene" width="1280" height="720"></canvas>
+    <div id="fastHint">Sıra boş, günü hızlandırabilirsin ⏩</div>
+  </div>
+
+  <div id="strip" class="card">
+    <canvas class="port" id="portrait" width="96" height="96"></canvas>
+    <div>
+      <div><span class="nm" id="custName">Henüz müşteri yok</span><span class="mood hidden" id="custMood"></span></div>
+      <div class="hint" id="custHint">Dükkân sakin… Pamuk güneşleniyor.</div>
+      <div class="bar"><i id="patFill"></i></div>
+      <div id="queueInfo"></div>
+    </div>
+    <div class="side">
+      <button class="big" id="openK">🥪 Tezgâha geç</button>
+      <div id="reaction"></div>
+    </div>
+  </div>
+  <footer>Tezgâha ya da tost makinesine dokun · Boşluk: tezgâh · Enter: servis · 0/1/2/3: hız · <span class="saveBadge" id="saveBadge"></span></footer>
+</div>
+
+<!-- Tezgâh -->
+<div id="backdrop" class="hidden"></div>
+<div id="kitchen" class="hidden">
+  <div class="kHead"><h3>🥪 Tezgâh</h3><button id="closeK">✕ Kapat</button></div>
+  <div class="kOrder">
+    <canvas class="port" id="kPortrait" width="96" height="96"></canvas>
+    <div style="flex:1">
+      <div><span class="nm" id="kName">—</span><span class="mood hidden" id="kMood"></span></div>
+      <div class="hint" id="kHint"></div>
+      <div id="kBook"></div>
+      <div class="bar"><i id="kPat"></i></div>
+    </div>
+  </div>
+  <div class="kMain">
+    <div>
+      <canvas id="stack" width="360" height="222"></canvas>
+      <div class="sandRow"><div id="sandLabel">Önce bir ekmek seç.</div><div id="sandPrice"></div></div>
+      <div class="actions">
+        <button id="toastBtn" class="toastb">🔥 Tost makinesine bas</button>
+        <button id="undoBtn">↩ Geri al</button>
+        <button id="clearBtn">🗑 Temizle</button>
+        <button id="serveBtn" class="serve">✅ Servis et</button>
+      </div>
+    </div>
+    <div>
+      <div class="tabs" id="catTabs"></div>
+      <div id="catPanel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Başlangıç -->
+<div class="overlay" id="startModal">
+  <div class="box narrow">
+    <h2>🥪 Umut Sandviç Evi</h2>
+    <p>Bursa’da, Ulucami Caddesi’nde küçük bir sandviç dükkânın var. Müşteriler ne istediklerini <b>söylemez</b>, ruh hâllerini ve durumlarını anlatır. Sen anlarsın!</p>
+    <ul>
+      <li>Sırayla: <b>ekmek → et → peynir → sebze → sos</b>. İstersen tost makinesine bas.</li>
+      <li>Herkesin gizli sevdikleri ve sevmedikleri var. Tepkilerinden öğren, <b>📒 Defter</b>’e yazılır.</li>
+      <li>Bir ruh hâlini tam tutturunca <b>Ruh hâli rehberi</b>ne ipucu eklenir.</li>
+      <li>Gün sonunda kazandığınla <b>malzeme, ekipman ve dekor</b> al. Yaratımlarını <b>imza tarif</b> yap.</li>
+      <li>Sıra boşken günü 2x/4x hızlandır, müşteri gelince 1x’e döner.</li>
+    </ul>
+    <p id="startStatus" style="text-align:center;color:#7a5a40">Kayıt kontrol ediliyor…</p>
+    <div class="row" id="startBtns"></div>
+  </div>
+</div>
+
+<!-- Gün sonu -->
+<div class="overlay hidden" id="endModal">
+  <div class="box narrow">
+    <h2 id="endTitle">Gün bitti 🌙</h2>
+    <div id="endBody"></div>
+    <div id="endCreations"></div>
+    <div class="row"><button class="main ok" id="toShopBtn">🏪 Dükkâna geç</button></div>
+  </div>
+</div>
+
+<!-- Dükkân -->
+<div class="overlay hidden" id="shopModal">
+  <div class="box">
+    <h2>🏪 Dükkân <span class="money" id="shopMoney"></span></h2>
+    <div class="tabs" id="shopTabs"></div>
+    <div id="shopPanel"></div>
+    <p id="tomorrow" style="text-align:center;color:#7a5a40"></p>
+    <div class="row"><button class="main ok" id="nextDayBtn">☀️ Kepenkleri aç (yeni gün)</button></div>
+  </div>
+</div>
+
+<!-- Defter -->
+<div class="overlay hidden" id="bookModal">
+  <div class="box">
+    <h2>📒 Defter</h2>
+    <div class="tabs" id="bookTabs"></div>
+    <div id="bookPanel"></div>
+    <div class="row"><button class="main" id="bookClose">Kapat</button></div>
+  </div>
+</div>
+
+<!-- Kayıt -->
+<div class="overlay hidden" id="setModal">
+  <div class="box narrow">
+    <h2>⚙ Kayıt</h2>
+    <p id="saveMode"></p>
+    <p>İlerlemen her gün sonunda ve her alışverişte otomatik kaydedilir. Başka bir cihaza taşımak için yedek kodunu kopyala, orada yapıştır.</p>
+    <h4>Yedek kodu</h4>
+    <textarea id="exportBox" readonly></textarea>
+    <div class="row"><button id="copyBtn">📋 Kopyala</button></div>
+    <h4>Yedekten yükle</h4>
+    <textarea id="importBox" placeholder="Yedek kodunu buraya yapıştır"></textarea>
+    <div class="row"><button id="importBtn">⬆ Yükle</button><button id="resetBtn" class="ghost">🗑 Sıfırdan başla</button></div>
+    <div class="row"><button class="main" id="setClose">Kapat</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="js/data.js"></script>
+<script src="js/art.js"></script>
+<script src="js/save.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
