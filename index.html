@@ -6,7 +6,207 @@
 <title>Umut Sandviç Evi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<style>
+:root { --ink:#3b2418; --cream:#f6e7c8; --cream2:#efd9ad; --paper:#fff6e2; --gold:#ffd35c; --red:#d8432f; --green:#3f8f6a; --ok:#5bbf4a; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #2b1d1a; color: var(--ink); font-family: 'VT323', monospace; font-size: 20px; }
+#app { max-width: 1000px; margin: 0 auto; padding: 10px; }
+
+header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between;
+  background: var(--cream); border: 4px solid var(--ink); padding: 6px 10px; margin-bottom: 8px; box-shadow: 0 4px 0 #120b09; }
+header h1 { font-family: 'Pixelify Sans', sans-serif; font-size: 21px; margin: 0; color: var(--red); letter-spacing: 1px; }
+header h1 small { font-size: 13px; color: #7a5a40; letter-spacing: 0; margin-left: 6px; }
+.stats { display: flex; gap: 12px; flex-wrap: wrap; font-size: 22px; align-items: center; }
+.stats b { font-family: 'Pixelify Sans'; font-weight: 600; }
+.hbtns { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.hbtns .sep { width: 6px; }
+
+button { font-family: 'Pixelify Sans', sans-serif; font-size: 15px; color: var(--ink); background: var(--gold);
+  border: 3px solid var(--ink); padding: 5px 9px; cursor: pointer; box-shadow: 0 3px 0 var(--ink); transition: transform .05s; }
+button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+button:disabled { opacity: .4; cursor: not-allowed; }
+button.on { background: var(--red); color: #fff; }
+button.ok { background: var(--ok); color: #fff; }
+button.ghost { background: var(--paper); }
+
+#stage { position: relative; border: 4px solid var(--ink); box-shadow: 0 4px 0 #120b09; background: #000; line-height: 0; }
+#scene { width: 100%; height: auto; image-rendering: pixelated; display: block; cursor: pointer; }
+#fastHint { position: absolute; top: 8px; right: 8px; line-height: 1.1; background: rgba(43,29,26,.85); color: var(--gold);
+  font-size: 18px; padding: 4px 8px; border: 2px solid var(--gold); display: none; }
+
+.card { background: var(--cream); border: 4px solid var(--ink); padding: 8px; box-shadow: 0 4px 0 #120b09; }
+#strip { margin-top: 8px; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start; }
+@media (max-width: 640px) { #strip { grid-template-columns: auto 1fr; } #strip .side { grid-column: 1 / -1; max-width: none; } }
+canvas.port { width: 72px; height: 72px; image-rendering: pixelated; background: var(--cream2); border: 3px solid var(--ink); flex: none; display: block; }
+.nm { font-family: 'Pixelify Sans'; font-weight: 600; font-size: 17px; }
+.mood { display: inline-block; font-size: 16px; background: var(--paper); border: 2px solid var(--ink); padding: 0 6px; margin-left: 6px; line-height: 1.2; vertical-align: middle; }
+.hint { font-size: 21px; line-height: 1.05; margin-top: 3px; }
+.bar { height: 12px; border: 3px solid var(--ink); background: #fff; margin-top: 6px; }
+.bar i { display: block; height: 100%; background: var(--ok); width: 0%; }
+#queueInfo { font-size: 17px; color: #7a5a40; margin-top: 3px; }
+.side { display: flex; flex-direction: column; gap: 6px; min-width: 200px; max-width: 290px; }
+button.big { font-size: 19px; padding: 10px 14px; background: var(--ok); color: #fff; }
+button.big.pulse { animation: pulse 1s infinite; }
+@keyframes pulse { 50% { transform: scale(1.05); } }
+#reaction { font-size: 19px; line-height: 1.05; }
+
+/* Tezgâh penceresi */
+#backdrop { position: fixed; inset: 0; background: rgba(20,12,10,.35); z-index: 19; }
+#kitchen { position: fixed; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 1000px; max-height: 88vh; overflow: auto; z-index: 20;
+  background: var(--cream); border: 4px solid var(--ink); border-bottom: none; box-shadow: 0 -6px 0 rgba(0,0,0,.25); padding: 10px 12px 14px; animation: up .18s ease-out; }
+@keyframes up { from { transform: translateY(40px); opacity: .3; } }
+.kHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px; }
+.kHead h3 { font-family: 'Pixelify Sans'; margin: 0; color: var(--red); font-size: 20px; }
+.kOrder { display: flex; gap: 10px; align-items: flex-start; background: var(--paper); border: 3px solid var(--ink); padding: 6px; }
+#kBook { font-size: 17px; color: #5a4030; margin-top: 4px; }
+.kMain { display: grid; grid-template-columns: 1fr 1.3fr; gap: 12px; margin-top: 10px; }
+@media (max-width: 720px) { .kMain { grid-template-columns: 1fr; } }
+#stack { width: 100%; height: auto; image-rendering: pixelated; background: #e8cf9c; border: 3px solid var(--ink); display: block; }
+.sandRow { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; margin: 4px 0 6px; }
+#sandLabel { font-size: 18px; line-height: 1; }
+#sandPrice { font-family: 'Pixelify Sans'; font-size: 17px; white-space: nowrap; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.actions .serve { background: var(--ok); color: #fff; grid-column: 1 / -1; font-size: 18px; padding: 8px; }
+.actions .toastb { grid-column: 1 / -1; background: #ff9d4d; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.tabs button { font-size: 14px; padding: 4px 7px; background: var(--paper); }
+.tabs button.on { background: var(--gold); color: var(--ink); }
+.tabs button .dot { display: inline-block; min-width: 16px; background: var(--red); color: #fff; border-radius: 8px; font-size: 11px; padding: 0 4px; margin-left: 3px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 5px; }
+.ing { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 2px; background: var(--paper); font-size: 12px; line-height: 1; min-height: 62px; position: relative; }
+.ing canvas { width: 32px; height: 32px; image-rendering: pixelated; }
+.ing.sel { background: var(--gold); }
+.ing .cnt { position: absolute; top: 2px; right: 4px; background: var(--red); color: #fff; font-size: 11px; padding: 0 4px; }
+.ing.lock { filter: grayscale(1); opacity: .45; }
+.ing .pr { font-size: 11px; color: #7a5a40; }
+.recipes { display: grid; gap: 5px; max-height: 300px; overflow: auto; }
+.rec { background: var(--paper); border: 2px solid var(--ink); padding: 4px 8px; font-size: 17px; line-height: 1.1; }
+.rec b { font-family: 'Pixelify Sans'; font-size: 15px; }
+.rec.lock { opacity: .45; }
+.rec .sig { color: var(--red); }
+
+/* Açılır pencereler */
+.overlay { position: fixed; inset: 0; background: rgba(20,12,10,.72); display: flex; align-items: center; justify-content: center; z-index: 30; padding: 10px; }
+.overlay .box { background: var(--cream); border: 4px solid var(--ink); padding: 14px 18px; max-width: 760px; width: 100%; box-shadow: 0 6px 0 #120b09; max-height: 94vh; overflow: auto; line-height: 1.15; }
+.overlay .box.narrow { max-width: 540px; text-align: center; }
+.overlay h2 { font-family: 'Pixelify Sans'; color: var(--red); margin: 0 0 8px; font-size: 25px; }
+.overlay h4 { font-family: 'Pixelify Sans'; margin: 12px 0 6px; font-size: 16px; color: #7a3e22; }
+.overlay p, .overlay li { font-size: 19px; margin: 4px 0; text-align: left; }
+.overlay ul { padding-left: 20px; margin: 8px 0; }
+.overlay .row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+.overlay button.main { font-size: 18px; padding: 8px 16px; }
+.hidden { display: none !important; }
+.shopGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px; }
+.shopItem { background: var(--paper); border: 2px solid var(--ink); padding: 6px; display: flex; gap: 8px; align-items: center; }
+.shopItem .ico { font-size: 24px; width: 34px; text-align: center; }
+.shopItem canvas { width: 32px; height: 32px; image-rendering: pixelated; }
+.shopItem .t { flex: 1; font-size: 16px; line-height: 1; }
+.shopItem .t b { font-family: 'Pixelify Sans'; font-size: 14px; display: block; margin-bottom: 2px; }
+.shopItem.owned { background: #e3f3d8; }
+.shopItem button { font-size: 13px; padding: 4px 7px; white-space: nowrap; }
+.money { font-family: 'Pixelify Sans'; font-size: 20px; }
+.people { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; }
+.person { background: var(--paper); border: 2px solid var(--ink); padding: 6px; display: flex; gap: 8px; font-size: 16px; line-height: 1.05; }
+.person canvas { width: 48px; height: 48px; image-rendering: pixelated; background: var(--cream2); border: 2px solid var(--ink); flex: none; }
+.person b { font-family: 'Pixelify Sans'; font-size: 13px; }
+.person.unknown { opacity: .5; }
+.creation { background: var(--paper); border: 2px solid var(--ink); padding: 6px 8px; margin: 4px 0; font-size: 17px; text-align: left; }
+.creation input { font-family: 'VT323'; font-size: 18px; border: 2px solid var(--ink); padding: 2px 6px; width: 200px; max-width: 100%; }
+textarea { width: 100%; font-family: 'VT323'; font-size: 15px; border: 2px solid var(--ink); background: #fff; min-height: 60px; }
+#toast { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); background: var(--ink); color: var(--gold); z-index: 40; max-width: 92vw;
+  padding: 4px 12px; font-size: 20px; line-height: 1.2; opacity: 0; transition: opacity .25s; pointer-events: none; border: 2px solid var(--gold); text-align: center; }
+#toast.show { opacity: 1; }
+footer { color: #a88a6a; font-size: 16px; text-align: center; margin-top: 10px; }
+.saveBadge { font-size: 15px; color: #7a5a40; }
+
+/* ---------- Mobil ---------- */
+html { -webkit-text-size-adjust: 100%; }
+button, canvas, .ing { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+@media (max-width: 640px) {
+  body { font-size: 18px; }
+  #app { padding: 4px; }
+  header { padding: 4px 6px; gap: 4px; }
+  header h1 { font-size: 16px; width: 100%; }
+  header h1 small { display: none; }
+  .stats { gap: 8px; font-size: 17px; }
+  .hbtns { width: 100%; justify-content: space-between; }
+  .hbtns button { padding: 4px 7px; font-size: 13px; }
+  .hbtns .sep { display: none; }
+  #fastHint { font-size: 14px; top: 4px; right: 4px; }
+  #strip { gap: 6px; padding: 6px; }
+  canvas.port { width: 56px; height: 56px; }
+  .hint { font-size: 18px; }
+  button.big { font-size: 17px; padding: 10px; }
+  #kitchen { max-height: 92vh; padding: 6px 6px 12px; }
+  .kOrder { padding: 4px; gap: 6px; }
+  .kOrder .hint { font-size: 17px; }
+  #kBook { font-size: 15px; }
+  .kMain { gap: 6px; margin-top: 6px; }
+  .tabs button { font-size: 12px; padding: 4px 5px; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 4px; }
+  .ing { min-height: 56px; font-size: 11px; }
+  .actions button { padding: 8px 4px; }
+  .overlay { padding: 4px; align-items: flex-start; }
+  .overlay .box { padding: 10px; max-height: 98vh; }
+  .overlay h2 { font-size: 21px; }
+  .overlay p, .overlay li { font-size: 17px; }
+  footer { font-size: 13px; }
+  #newName { width: 100% !important; }
+}
+/* Telefonda tezgâh: küçük önizleme → malzemeler → altta sabit butonlar */
+@media (max-width: 720px) {
+  .kMain { display: flex; flex-direction: column; }
+  .kMain > div:first-child { display: contents; }
+  #stack { order: 1; width: auto; height: 20vh; max-width: 100%; align-self: center; }
+  .sandRow { order: 2; }
+  .kMain > div:last-child { order: 3; }
+  .actions { order: 4; position: sticky; bottom: -12px; background: var(--cream); padding: 6px 0 10px; z-index: 2; border-top: 3px solid var(--ink); grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .actions .toastb { grid-column: span 2; }
+  .actions .serve { grid-column: 1 / -1; }
+  .kOrder canvas.port { width: 44px; height: 44px; }
+}
+
+/* ---------- Telefon yatay (yan çevrilmiş) ---------- */
+.rotateTip { display: none; }
+@media (max-width: 640px) and (orientation: portrait) {
+  .rotateTip { display: block; text-align: center; color: #a88a6a; font-size: 15px; margin-top: 6px; }
+}
+@media (orientation: landscape) and (max-height: 540px) {
+  html, body { font-size: 16px; }
+  #app { max-width: none; padding: 4px 6px; display: grid; grid-template-columns: auto minmax(220px, 1fr); grid-template-rows: auto 1fr; gap: 6px; height: 100vh; height: 100dvh; }
+  header { grid-column: 1 / -1; margin: 0; padding: 3px 8px; flex-wrap: nowrap; box-shadow: 0 2px 0 #120b09; }
+  header h1 { font-size: 15px; white-space: nowrap; }
+  header h1 small, footer { display: none; }
+  .stats { font-size: 15px; gap: 8px; flex-wrap: nowrap; white-space: nowrap; }
+  .hbtns { flex-wrap: nowrap; }
+  .hbtns button { padding: 2px 6px; font-size: 12px; box-shadow: 0 2px 0 var(--ink); }
+  #stage { align-self: start; height: calc(100dvh - 54px); aspect-ratio: 16 / 9; max-width: 68vw; }
+  #scene { height: 100%; width: 100%; object-fit: contain; }
+  #strip { margin: 0; grid-template-columns: 1fr; align-content: start; overflow: auto; max-height: calc(100dvh - 54px); padding: 6px; }
+  #strip canvas.port { width: 44px; height: 44px; float: left; margin-right: 6px; }
+  #strip .side { max-width: none; min-width: 0; }
+  .hint { font-size: 16px; }
+  button.big { font-size: 15px; padding: 8px; }
+  #reaction { font-size: 15px; }
+  /* tezgâh tam ekran, iki sütun */
+  #kitchen { max-height: 100dvh; height: 100dvh; padding: 4px 8px; border-top: 3px solid var(--ink); }
+  .kHead { margin-bottom: 2px; } .kHead h3 { font-size: 16px; } .kHead button { padding: 2px 8px; font-size: 12px; }
+  .kOrder { padding: 3px; gap: 6px; } .kOrder canvas.port { width: 36px; height: 36px; }
+  .kOrder .hint { font-size: 15px; } #kBook { font-size: 13px; margin-top: 1px; } .kOrder .bar { height: 8px; margin-top: 3px; border-width: 2px; }
+  .kMain { display: grid !important; grid-template-columns: 38% 1fr; gap: 8px; margin-top: 4px; }
+  .kMain > div:first-child { display: block !important; }
+  #stack { height: auto !important; width: 100% !important; max-height: 26dvh; object-fit: contain; }
+  .sandRow { margin: 2px 0; } #sandLabel { font-size: 14px; } #sandPrice { font-size: 13px; }
+  .actions { position: static !important; border: none !important; padding: 0 !important; grid-template-columns: 1fr 1fr !important; gap: 4px; }
+  .actions button { padding: 4px; font-size: 13px; }
+  .actions .toastb { grid-column: 1 / -1 !important; } .actions .serve { font-size: 15px; padding: 6px; }
+  .tabs { margin-bottom: 4px; gap: 3px; } .tabs button { font-size: 11px; padding: 2px 5px; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 3px; }
+  .ing { min-height: 48px; font-size: 10px; padding: 2px; } .ing canvas { width: 24px; height: 24px; }
+  .overlay { align-items: flex-start; padding: 4px; } .overlay .box { max-height: 98dvh; padding: 8px 12px; }
+}
+
+</style>
 </head>
 <body>
 <div id="app">
@@ -154,9 +354,1399 @@
 </div>
 
 <div id="toast"></div>
-<script src="js/data.js"></script>
-<script src="js/art.js"></script>
-<script src="js/save.js"></script>
-<script src="js/game.js"></script>
+<script>
+/* Umut Sandviç Evi — oyun verisi
+ * Malzemeler (Subway tarzı: ekmek → et → peynir → sebze → sos → ekstra),
+ * menü tarifleri, ruh hâlleri/durumlar, karakterler, hava ve dükkân ürünleri. */
+'use strict';
+
+const CATS = [
+  { id: 'ekmek', name: 'Ekmek', emo: '🍞' },
+  { id: 'et', name: 'Et & Protein', emo: '🥩' },
+  { id: 'peynir', name: 'Peynir', emo: '🧀' },
+  { id: 'sebze', name: 'Sebze', emo: '🥬' },
+  { id: 'sos', name: 'Sos', emo: '🥫' },
+  { id: 'ekstra', name: 'Ekstra', emo: '🍯' },
+];
+
+/* shape: çizim şablonu (ikon + tezgâhtaki katman). c1/c2: renkler.
+ * cost: 0 = baştan açık, aksi hâlde dükkândan açılır (₺). price: satış katkısı (₺). */
+const ING = {
+  // --- Ekmekler ---
+  tost:      { name: 'Tost ekmeği', cat: 'ekmek', price: 10, cost: 0,   bread: { crust: '#e2b06a', inner: '#fbf0d6', w: 50, hk: 1,   style: 'slice' } },
+  somun:     { name: 'Somun',       cat: 'ekmek', price: 10, cost: 0,   bread: { crust: '#d39350', inner: '#f7e2b8', w: 62, hk: 1.1, style: 'loaf' } },
+  baget:     { name: 'Baget',       cat: 'ekmek', price: 12, cost: 0,   bread: { crust: '#c47a2e', inner: '#f3dcae', w: 76, hk: .9,  style: 'baget' } },
+  simit:     { name: 'Simit',       cat: 'ekmek', price: 10, cost: 0,   bread: { crust: '#a8551f', inner: '#f0c890', w: 52, hk: 1,   style: 'seed' } },
+  ciabatta:  { name: 'Ciabatta',    cat: 'ekmek', price: 14, cost: 250, bread: { crust: '#d9b47a', inner: '#f5e6c8', w: 64, hk: .8,  style: 'flour' } },
+  kepekli:   { name: 'Tam buğday',  cat: 'ekmek', price: 12, cost: 200, bread: { crust: '#8a5a32', inner: '#d8b98e', w: 60, hk: 1,   style: 'grain' } },
+  otlu:      { name: 'Kekikli peynirli', cat: 'ekmek', price: 14, cost: 300, bread: { crust: '#d9a24a', inner: '#f7e2b8', w: 66, hk: 1, style: 'herb' } },
+  lavas:     { name: 'Lavaş (dürüm)', cat: 'ekmek', price: 10, cost: 250, bread: { crust: '#ecd3a0', inner: '#f8ead0', w: 70, hk: .45, style: 'wrap' } },
+
+  // --- Et & protein ---
+  sucuk:     { name: 'Sucuk',        cat: 'et', price: 12, cost: 0,   tags: ['et', 'protein', 'agir', 'baharat'], shape: 'rounds', c1: '#9c2b22', c2: '#e6b38a' },
+  hindiFume: { name: 'Hindi füme',   cat: 'et', price: 10, cost: 0,   tags: ['et', 'protein', 'fume'], shape: 'fold', c1: '#eab0a8', c2: '#f6cfc8' },
+  tavuk:     { name: 'Tavuk fileto', cat: 'et', price: 10, cost: 0,   tags: ['et', 'protein'], shape: 'strips', c1: '#e2b77a', c2: '#b9874a' },
+  yumurta:   { name: 'Haşlanmış yumurta', cat: 'et', price: 6, cost: 0, tags: ['protein', 'kahvalti'], shape: 'egg', c1: '#fdfdf6', c2: '#ffc21a' },
+  hindiJambon:{ name: 'Hindi jambon', cat: 'et', price: 9, cost: 150, tags: ['et', 'protein'], shape: 'sheet', c1: '#f2b8b8', c2: '#f9d6d6' },
+  danaSalam: { name: 'Dana salam',   cat: 'et', price: 10, cost: 200, tags: ['et', 'protein', 'agir'], shape: 'rounds', c1: '#c24a4a', c2: '#f0c0b0' },
+  kofte:     { name: 'Köfte',        cat: 'et', price: 12, cost: 300, tags: ['et', 'protein', 'agir'], shape: 'balls', c1: '#7a3e22', c2: '#a35a32' },
+  teriyaki:  { name: 'Teriyaki tavuk', cat: 'et', price: 12, cost: 350, tags: ['et', 'protein', 'tatli'], shape: 'strips', c1: '#a8622a', c2: '#6e3a14' },
+  ton:       { name: 'Ton balığı',   cat: 'et', price: 11, cost: 300, tags: ['balik', 'protein', 'kremali'], shape: 'chunks', c1: '#d9c3a0', c2: '#b89a72' },
+  falafel:   { name: 'Falafel',      cat: 'et', price: 10, cost: 350, tags: ['protein', 'vegan'], shape: 'balls', c1: '#8a6a2a', c2: '#5f8a3a' },
+  rozbif:    { name: 'Rozbif',       cat: 'et', price: 15, cost: 500, tags: ['et', 'protein', 'agir', 'lux'], shape: 'fold', c1: '#a8484a', c2: '#d88080' },
+  biftek:    { name: 'Biftek',       cat: 'et', price: 16, cost: 600, tags: ['et', 'protein', 'agir', 'lux'], shape: 'strips', c1: '#6e3a28', c2: '#9a5a40' },
+  pastirma:  { name: 'Pastırma',     cat: 'et', price: 18, cost: 600, tags: ['et', 'protein', 'agir', 'fume', 'lux', 'koku'], shape: 'fold', c1: '#a8302a', c2: '#c9741f' },
+
+  // --- Peynir ---
+  kasar:     { name: 'Kaşar',        cat: 'peynir', price: 6, cost: 0,   tags: ['peynir', 'eriyen'], shape: 'sheet', c1: '#f7c93b', c2: '#ffe07a' },
+  beyaz:     { name: 'Beyaz peynir', cat: 'peynir', price: 5, cost: 0,   tags: ['peynir', 'kahvalti'], shape: 'chunks', c1: '#fbfbf2', c2: '#e2e2d2' },
+  cheddar:   { name: 'Cheddar',      cat: 'peynir', price: 6, cost: 150, tags: ['peynir', 'eriyen'], shape: 'sheet', c1: '#f08a24', c2: '#ffb050' },
+  mozzarella:{ name: 'Mozzarella',   cat: 'peynir', price: 7, cost: 250, tags: ['peynir', 'eriyen'], shape: 'rounds', c1: '#fffaf0', c2: '#efe6d0' },
+
+  // --- Sebze ---
+  marul:     { name: 'Marul',        cat: 'sebze', price: 3, cost: 0,   tags: ['ferah', 'yesil'], shape: 'leaf', c1: '#69b84a', c2: '#86d061' },
+  domates:   { name: 'Domates',      cat: 'sebze', price: 3, cost: 0,   tags: ['ferah', 'kahvalti'], shape: 'rounds', c1: '#e2412f', c2: '#f8b0a0' },
+  salatalik: { name: 'Salatalık',    cat: 'sebze', price: 3, cost: 0,   tags: ['ferah', 'yesil', 'kahvalti'], shape: 'rounds', c1: '#5a9a3a', c2: '#d8efb0' },
+  tursu:     { name: 'Turşu',        cat: 'sebze', price: 3, cost: 0,   tags: ['eksi', 'yesil'], shape: 'rounds', c1: '#8a9a3a', c2: '#c3cf72' },
+  sogan:     { name: 'Kırmızı soğan',cat: 'sebze', price: 3, cost: 100, tags: ['koku'], shape: 'rings', c1: '#9a4a8a', c2: '#e8c8e0' },
+  yesilBiber:{ name: 'Yeşil biber',  cat: 'sebze', price: 3, cost: 100, tags: ['ferah', 'yesil'], shape: 'rings', c1: '#4fa83a', c2: '#a8e08a' },
+  jalapeno:  { name: 'Jalapeño',     cat: 'sebze', price: 4, cost: 150, tags: ['aci', 'yesil'], shape: 'rings', c1: '#2f7a2a', c2: '#d8e8a0' },
+  zeytin:    { name: 'Gemlik zeytini', cat: 'sebze', price: 4, cost: 150, tags: ['kahvalti'], shape: 'balls', c1: '#2b2430', c2: '#6a5f78' },
+  misir:     { name: 'Mısır',        cat: 'sebze', price: 3, cost: 150, tags: ['tatli'], shape: 'dots', c1: '#f7d23b', c2: '#ffe680' },
+  roka:      { name: 'Roka',         cat: 'sebze', price: 4, cost: 200, tags: ['ferah', 'yesil'], shape: 'leaf', c1: '#3f8a3a', c2: '#6cb85a' },
+  avokado:   { name: 'Avokado',      cat: 'sebze', price: 8, cost: 450, tags: ['ferah', 'yesil', 'lux', 'kremali'], shape: 'chunks', c1: '#a8cf5a', c2: '#6a8a2a' },
+
+  // --- Sos ---
+  mayonez:   { name: 'Mayonez',      cat: 'sos', price: 2, cost: 0,   tags: ['kremali'], shape: 'drizzle', c1: '#fbf3d6', c2: '#e8dcb0' },
+  ketcap:    { name: 'Ketçap',       cat: 'sos', price: 2, cost: 0,   tags: ['tatli'], shape: 'drizzle', c1: '#d8302a', c2: '#a81e1a' },
+  acisos:    { name: 'Acı sos',      cat: 'sos', price: 2, cost: 100, tags: ['aci'], shape: 'drizzle', c1: '#e8501a', c2: '#a8300a' },
+  ballihardal:{ name: 'Ballı hardal', cat: 'sos', price: 3, cost: 100, tags: ['tatli'], shape: 'drizzle', c1: '#e8b01a', c2: '#b8820a' },
+  barbeku:   { name: 'Barbekü',      cat: 'sos', price: 3, cost: 150, tags: ['fume', 'tatli'], shape: 'drizzle', c1: '#6a2a14', c2: '#4a1a0a' },
+  ranch:     { name: 'Ranch',        cat: 'sos', price: 3, cost: 150, tags: ['kremali'], shape: 'drizzle', c1: '#f4f1e4', c2: '#8ab06a' },
+  sarimsak:  { name: 'Sarımsaklı',   cat: 'sos', price: 3, cost: 200, tags: ['kremali', 'koku'], shape: 'drizzle', c1: '#f6f0dc', c2: '#d8cfa8' },
+  marinara:  { name: 'Marinara',     cat: 'sos', price: 3, cost: 250, tags: [], shape: 'drizzle', c1: '#b8301e', c2: '#e86a4a' },
+
+  // --- Ekstra ---
+  bal:       { name: 'Bal',          cat: 'ekstra', price: 5, cost: 0,   tags: ['tatli', 'kahvalti'], shape: 'spread', c1: '#f0a81e', c2: '#ffd36a' },
+  kaymak:    { name: 'Kaymak',       cat: 'ekstra', price: 7, cost: 300, tags: ['tatli', 'kremali', 'kahvalti'], shape: 'spread', c1: '#fff8e6', c2: '#efe2c0' },
+  findik:    { name: 'Fındık kreması', cat: 'ekstra', price: 6, cost: 350, tags: ['tatli', 'kahvalti'], shape: 'spread', c1: '#6a3a1a', c2: '#9a5a2a' },
+};
+Object.values(ING).forEach(i => { i.tags = i.tags || []; });
+
+/* ---- Yardımcılar (sandviç özeti s = {bread, fills[], toasted, price}) ---- */
+const H = {
+  has: (s, id) => s.fills.includes(id),
+  tag: (s, t) => s.fills.filter(f => ING[f].tags.includes(t)).length,
+  cat: (s, c) => s.fills.filter(f => ING[f].cat === c).length,
+  cats: s => new Set(s.fills.map(f => ING[f].cat)).size,
+  n: s => s.fills.length,
+};
+
+/* ---- Ruh hâlleri & durumlar ----
+ * check(s) → 0..2 puan. Müşteriler malzeme adı SÖYLEMEZ; ne istedikleri durumlarından anlaşılır.
+ * guide: 3 yıldız aldığında "Ruh hâli rehberi"ne yazılan ipucu. */
+const MOODS = {
+  usumus: { emo: '🥶', label: 'Üşümüş', pat: 1, tip: 1, notWeather: ['sicak'],
+    lines: ['Uludağ’dan rüzgâr esiyor, iliklerime kadar üşüdüm…', 'Ellerim buz kesti, içimi ısıtacak bir şey lazım.', 'Bu soğukta dişlerim takırdıyor…'],
+    check: s => s.toasted ? 2 : (H.tag(s, 'eriyen') ? 1 : 0),
+    react: ['Bu buz gibi…', 'İdare eder.', 'Oh be, içim ısındı!'], guide: 'Tost makinesinden geçsin.' },
+  bunalmis: { emo: '🥵', label: 'Bunalmış', pat: .9, tip: 1, onlyWeather: ['sicak', 'gunesli'],
+    lines: ['Bu sıcakta eriyorum… serin bir şey olsun, ateş görmesin.', 'Güneş tepemde, ferah ferah bir şey lazım.'],
+    check: s => s.toasted ? 0 : (H.tag(s, 'ferah') >= 2 ? 2 : 1),
+    react: ['Bu sıcakta tost mu?!', 'Fena değil ama biraz daha ferah olabilirdi.', 'Ohh, serinledim!'], guide: 'Tostlanmasın, en az iki taze sebze.' },
+  aceleci: { emo: '⏱️', label: 'Aceleci', pat: .6, tip: 1.3,
+    lines: ['Çok acelem var, öyle uzun uzun uğraşma!', 'Otobüs kalkıyor, hızlı ve sade lütfen!', 'Beş dakikam var usta, yetişir mi?'],
+    check: s => { const n = H.n(s); return n >= 1 && n <= 3 && !s.toasted ? 2 : (n <= 4 ? 1 : 0); },
+    react: ['Bunu beklemeye vaktim yoktu!', 'Biraz uzun sürdü ama tamam.', 'Süper hızlı, sağ ol!'], guide: 'En fazla 3 malzeme, tost yok.' },
+  uzgun: { emo: '😢', label: 'Hüzünlü', pat: 1.2, tip: 1,
+    lines: ['Bugün hiçbir şey yolunda gitmedi… Beni teselli edecek bir şey.', 'Moralim yerlerde… insanın içini ısıtan, yumuşacık bir şey.'],
+    check: s => Math.min(2, (H.tag(s, 'eriyen') ? 1 : 0) + (s.toasted ? 1 : 0) + (H.tag(s, 'tatli') ? 1 : 0)),
+    react: ['Bu da moralimi düzeltmedi…', 'Biraz iyi geldi.', 'Ohh… dünya birden güzelleşti.'], guide: 'Sıcak + eriyen peynir ya da tatlı bir dokunuş.' },
+  kutlama: { emo: '🎉', label: 'Kutlamada', pat: 1, tip: 1.7,
+    lines: ['Bugün terfi aldım! Ne varsa koy, en lüksünden!', 'Müjde! Büyük haber aldım, cömert ol usta!'],
+    check: s => (H.n(s) >= 5 ? 1 : 0) + (H.tag(s, 'lux') ? 1 : 0),
+    react: ['Kutlama bu mu yani?', 'Fena değil!', 'İşte kutlamaya yakışır! 🎉'], guide: 'En az 5 malzeme ve lüks bir şey (rozbif, biftek, pastırma, avokado).' },
+  ac: { emo: '🍖', label: 'Kurt gibi aç', pat: 1, tip: 1,
+    lines: ['Sabahtan beri ağzıma lokma koymadım!', 'Karnım zil çalıyor, doyurucu olsun!', 'Öyle açım ki masayı yiyeceğim…'],
+    check: s => Math.min(2, H.tag(s, 'protein')),
+    react: ['Bu beni doyurmaz ki…', 'Biraz daha olsa…', 'Oh, doydum be!'], guide: 'En az iki protein.' },
+  hafif: { emo: '🌿', label: 'Hafif takılıyor', pat: 1, tip: 1,
+    lines: ['Bugün hafif takılıyorum, mideyi yormayalım.', 'Akşam düğüne gideceğim, ağır bir şey olmasın.'],
+    check: s => H.tag(s, 'agir') ? 0 : (H.tag(s, 'ferah') >= 2 ? 2 : 1),
+    react: ['Çok ağır oldu bu…', 'Hafif ama biraz sade.', 'Tam istediğim gibi, hafif ve taze!'], guide: 'Ağır et yok, en az iki taze sebze.' },
+  uykulu: { emo: '😴', label: 'Uykulu', pat: 1, tip: 1,
+    lines: ['Gözlerim kapanıyor… beni silkeleyecek bir şey!', 'Sabahladım… ağzımı yakan, yüzümü buruşturan bir şey lazım!'],
+    check: s => (H.tag(s, 'aci') ? 1 : 0) + (H.tag(s, 'eksi') ? 1 : 0),
+    react: ['Zzz… bu beni daha çok uyuttu.', 'Biraz açıldım.', 'Uyandım! Gözlerim fal taşı! 🔥'], guide: 'Hem acı hem ekşi.' },
+  nostaljik: { emo: '🕰️', label: 'Nostaljik', pat: 1.3, tip: 1.1,
+    lines: ['Çocukluğumdaki gibi bir şey… mahalle fırınından, sade, annemin yaptığı gibi.', 'Eskiden okul beslenme çantama ne konurdu, hatırlar mısın? Öyle bir şey.'],
+    check: s => { const p = (['somun', 'simit'].includes(s.bread) ? 1 : 0) + (H.has(s, 'beyaz') ? 1 : 0) + (H.has(s, 'domates') ? 1 : 0); return p === 3 ? 2 : (p === 2 ? 1 : 0); },
+    react: ['Hiç benzemedi…', 'Biraz andırıyor…', 'Tıpkı çocukluğumdaki gibi! 🥲'], guide: 'Somun ya da simit + beyaz peynir + domates.' },
+  randevu: { emo: '🌹', label: 'İlk buluşma', pat: 1, tip: 1.4,
+    lines: ['Birazdan ilk buluşmama gidiyorum… nefesim mis gibi kalmalı!', 'Bugün onunla ilk kez yemeğe çıkıyoruz, mahcup olmayayım!'],
+    check: s => H.tag(s, 'koku') ? 0 : (H.n(s) >= 3 ? 2 : 1),
+    react: ['Bu kokuyla nasıl buluşmaya giderim?!', 'Güzel ama biraz sade.', 'Mis gibi! Şansım açık olsun 🌹'], guide: 'Soğan, sarımsak, pastırma yok; en az 3 malzeme.' },
+  asik: { emo: '💕', label: 'Âşık', pat: 1, tip: 1.4,
+    lines: ['Kalbim pır pır… bana tatlı mı tatlı bir şey yap.', 'Bugün ona açılacağım, hayatım şekerli olsun!'],
+    check: s => H.tag(s, 'tatli') ? (H.n(s) >= 3 ? 2 : 1) : 0,
+    react: ['Bu hiç romantik değil…', 'Tatlı, ama biraz daha özen olabilirdi.', 'Kalbim pır pır! 💕'], guide: 'Tatlı bir şey ve en az 3 malzeme.' },
+  mac: { emo: '⚽', label: 'Maç günü', pat: 1, tip: 1.2,
+    lines: ['Akşam Bursaspor maçı var! Timsah gibi doyurucu ve ateşli bir şey!', 'Tribüne gidiyorum, gaz lazım usta!'],
+    check: s => (H.tag(s, 'aci') ? 1 : 0) + (H.tag(s, 'agir') ? 1 : 0),
+    react: ['Bununla tribünde bayılırım…', 'Fena değil, yarısı oldu.', 'Haydi Bursa! Gol gibi sandviç! ⚽'], guide: 'Acı bir şey + ağır bir et.' },
+  antrenman: { emo: '💪', label: 'Antrenman sonrası', pat: 1, tip: 1,
+    lines: ['Spordan geliyorum, kaslarım bayram etsin!', 'Bugün 10 kilometre koştum, yağsız ama dolu bir şey!'],
+    check: s => H.tag(s, 'protein') >= 2 && !H.tag(s, 'kremali') ? 2 : (H.tag(s, 'protein') ? 1 : 0),
+    react: ['Kaslarım ağlıyor…', 'Biraz daha protein olabilirdi.', 'Kaslarım teşekkür ediyor! 💪'], guide: 'İki protein, kremalı sos yok.' },
+  hasta: { emo: '🤧', label: 'Soğuk algınlığı', pat: 1.1, tip: 1,
+    lines: ['Hapşu! Boğazım yanıyor… yumuşak ve sıcak bir şey olsun.', 'Grip oldum galiba… boğazımı tahriş etmeyen, sıcacık bir şey.'],
+    check: s => s.toasted ? (!H.tag(s, 'aci') && !H.tag(s, 'eksi') ? 2 : 1) : 0,
+    react: ['Hapşu… bu iyi gelmedi.', 'Biraz rahatladım.', 'Ilık ılık, şifa gibi geldi 🤧'], guide: 'Sıcak, acı ve ekşi yok.' },
+  piknik: { emo: '🧺', label: 'Pikniğe gidiyor', pat: 1, tip: 1.1, notWeather: ['karli', 'yagmurlu'],
+    lines: ['Botanik Park’a pikniğe gidiyoruz! Yolda bozulmayacak, soğuk yenecek bir şey.', 'Uludağ yolunda piknik yapacağız, güneşe dayanıklı olsun.'],
+    check: s => (!s.toasted && !H.tag(s, 'kremali')) ? (H.n(s) >= 3 ? 2 : 1) : 0,
+    react: ['Bu yolda bozulur…', 'Olur, idare eder.', 'Piknik sepetinin yıldızı bu! 🧺'], guide: 'Tost yok, kremalı sos yok, en az 3 malzeme.' },
+  aysonu: { emo: '🪙', label: 'Ay sonu', pat: 1, tip: .6,
+    lines: ['Ay sonu geldi, cepte son bozukluklar… idareli olsun usta.', 'Maaş yarın yatacak, bugün cebimi yakmayalım.'],
+    check: s => s.price <= 45 ? 2 : (s.price <= 60 ? 1 : 0),
+    react: ['Bunu nasıl ödeyeceğim?!', 'Biraz pahalı ama olsun.', 'Hem lezzetli hem uygun, eyvallah!'], guide: 'Fiyat ₺45 ve altı.' },
+  kahvalti: { emo: '☀️', label: 'Kahvaltı modu', pat: 1, tip: 1, before: 690,
+    lines: ['Kahvaltı yapmadan çıktım, güne güzel başlamak lazım!', 'Sabah sabah kahvaltı sofrası tadında bir şey olsa…'],
+    check: s => { const p = H.tag(s, 'kahvalti') + (s.bread === 'simit' ? 1 : 0); return p >= 3 ? 2 : (p >= 2 ? 1 : 0); },
+    react: ['Bu kahvaltılık değil ki…', 'Fena değil.', 'Tam bir Bursa kahvaltısı! ☀️'], guide: 'Simit ya da kahvaltılıklar (peynir, zeytin, yumurta, bal, kaymak…).' },
+  gece: { emo: '🌙', label: 'Gece vardiyası', pat: 1, tip: 1.2, after: 1000,
+    lines: ['Sabaha kadar nöbetteyim, beni ayakta tutacak bir şey.', 'Gece mesaisine giriyorum, uzun bir gece olacak…'],
+    check: s => (s.toasted ? 1 : 0) + (H.tag(s, 'protein') >= 2 ? 1 : 0),
+    react: ['Bu gece zor geçecek…', 'İdare eder.', 'Sabaha kadar dayanırım artık! 🌙'], guide: 'Sıcak ve en az iki protein.' },
+  maceraci: { emo: '🧭', label: 'Maceraperest', pat: 1, tip: 1.3,
+    lines: ['Bana daha önce hiç yemediğim bir şey yap, şaşırt beni!', 'Sıradan şeylerden sıkıldım, cesur ol usta!'],
+    check: s => H.cats(s) >= 4 ? 2 : (H.cats(s) === 3 ? 1 : 0),
+    react: ['Sıradan…', 'İlginç!', 'Vay be! Hiç böyle bir şey yememiştim 🧭'], guide: 'En az 4 farklı kategoriden malzeme.' },
+  diyet: { emo: '🥗', label: 'Diyette', pat: 1, tip: 1,
+    lines: ['Diyetteyim, diyetisyenim beni izliyor…', 'Bu hafta kendime iyi bakıyorum, sağlıklı olsun.'],
+    check: s => (H.tag(s, 'kremali') || H.tag(s, 'tatli') || H.tag(s, 'agir')) ? 0 : ((['kepekli', 'lavas'].includes(s.bread) || H.tag(s, 'ferah') >= 2) ? 2 : 1),
+    react: ['Diyetim bitti…', 'Fena değil.', 'Diyetisyenim gurur duyar! 🥗'], guide: 'Kremalı/tatlı/ağır yok; tam buğday, lavaş ya da bol sebze.' },
+  cocuksu: { emo: '🎈', label: 'Şımarık', pat: .9, tip: 1, kidOnly: true,
+    lines: ['Tatlı bir şey istiyoruuum!', 'Annem tatlı yok dedi ama sen söylemezsin di mi?'],
+    check: s => H.tag(s, 'tatli') ? (H.n(s) >= 2 ? 2 : 1) : 0,
+    react: ['Hıı… bu tatlı değil!', 'Fena değil!', 'Yaşasın! 🎈'], guide: 'Tatlı bir şey.' },
+  yagmur: { emo: '☔', label: 'Sırılsıklam', pat: 1.1, tip: 1.1, onlyWeather: ['yagmurlu'],
+    lines: ['Yağmura yakalandım, iliklerime kadar ıslandım!', 'Şemsiyem uçtu gitti… beni kendime getir usta.'],
+    check: s => Math.min(2, (s.toasted ? 1 : 0) + (H.tag(s, 'eriyen') ? 1 : 0)),
+    react: ['Hâlâ titriyorum…', 'Biraz ısındım.', 'Kurudum sanki! ☔'], guide: 'Sıcak + eriyen peynir.' },
+  gizemli: { emo: '🕶️', label: 'Gizemli', pat: 1, tip: 1, special: true,
+    lines: ['Şefin önerisi neyse… Bu dükkânı tanımak istiyorum.', 'Bana bu dükkânı en iyi anlatan sandviçi yapın.'],
+    check: s => (H.cats(s) >= 4 ? 1 : 0) + ((s.toasted || H.tag(s, 'lux')) ? 1 : 0),
+    react: ['İlginç… çok sade.', 'Hmm… not aldım.', 'Etkileyici.'], guide: '4 kategori + sıcak ya da lüks.' },
+};
+
+/* ---- Karakterler ----
+ * likes/dislikes: gizli! Müşteri tepkilerinden öğrenilip deftere yazılır.
+ * quirk: ilk gelişte nadiren söylenen, malzeme adı geçmeyen belirsiz ipucu. */
+const CHARS = {
+  huseyin: { name: 'Dolmuşçu Hüseyin Abi', likes: ['sucuk', 'kasar', 'acisos'], dislikes: ['bal', 'avokado'],
+    moods: ['ac', 'usumus', 'aceleci', 'kutlama', 'uykulu', 'mac', 'gece'], base: 40,
+    greet: ['Selamün aleyküm usta!', 'Kontağı kapattım geldim.'], quirk: 'Tatlı işlerle aram yoktur, baharatlı severim.',
+    look: { skin: '#d9a57a', hair: '#2b2b2b', style: 'cap', hat: '#c9a227', shirt: '#6b8e4e', pants: '#3a3a48', mustache: '#2b1b12' } },
+  selin: { name: 'Selin Öğretmen', likes: ['domates', 'mozzarella', 'roka'], dislikes: ['jalapeno', 'acisos'],
+    moods: ['usumus', 'uzgun', 'hafif', 'nostaljik', 'uykulu', 'diyet', 'hasta'], base: 40,
+    greet: ['Merhabalar!', 'Teneffüs kısa, hemen döneceğim.'], quirk: 'Ağzımı yakan şeyleri hiç sevmem.',
+    look: { skin: '#f1c9a5', hair: '#5a3825', style: 'long', shirt: '#7a5fb0', pants: '#3b3b5c', glasses: true } },
+  burak: { name: 'Sporcu Burak', likes: ['tavuk', 'hindiFume', 'yumurta'], dislikes: ['mayonez', 'bal', 'findik'],
+    moods: ['antrenman', 'ac', 'hafif', 'kutlama', 'aceleci', 'diyet'], base: 35,
+    greet: ['Selam hocam!', 'Naber usta, formdayız!'], quirk: 'Şekerle işim olmaz hocam.',
+    look: { skin: '#c98b5a', hair: '#1c1c1c', style: 'short', band: '#e23b3b', shirt: '#f0f0f0', pants: '#2f3b8c' } },
+  ece: { name: 'Küçük Ece', kid: true, likes: ['cheddar', 'ketcap', 'bal'], dislikes: ['marul', 'salatalik', 'yesilBiber', 'jalapeno', 'tursu', 'roka', 'avokado'],
+    moods: ['ac', 'uzgun', 'usumus', 'cocuksu', 'kahvalti'], base: 30,
+    greet: ['Merhabaa!', 'Annem dışarıda bekliyor!'], quirk: 'Yeşil şeyler yemem, iğrenç!',
+    look: { skin: '#f6d2b0', hair: '#c26a2e', style: 'pig', shirt: '#ff8fb1', pants: '#4a6fd0', kid: true } },
+  fatma: { name: 'Fatma Teyze', likes: ['beyaz', 'zeytin', 'somun'], dislikes: ['acisos', 'jalapeno', 'barbeku'],
+    moods: ['nostaljik', 'usumus', 'uzgun', 'hafif', 'kahvalti', 'hasta'], base: 55,
+    greet: ['Hayırlı işler evladım.', 'Pazardan dönüyorum yavrum.'], quirk: 'Bizim memleketin zeytini gibisi yoktur evladım.',
+    look: { skin: '#e8bf98', hair: '#3f8f6a', style: 'scarf', shirt: '#9c4f6b', pants: '#5b4636' } },
+  kerem: { name: 'Plazacı Kerem', likes: ['hindiFume', 'ciabatta', 'roka'], dislikes: ['sogan', 'sucuk'],
+    moods: ['aceleci', 'hafif', 'kutlama', 'uykulu', 'randevu', 'diyet'], base: 30,
+    greet: ['Hızlıca bir şey alayım.', 'Toplantı arasıyım.'], quirk: 'Kokan şeyler olmasın, müşteriyle görüşeceğim.',
+    look: { skin: '#f0c8a0', hair: '#2b2b2b', style: 'short', shirt: '#e8eef5', pants: '#2b3445', tie: '#2d4f9e' } },
+  deniz: { name: 'Öğrenci Deniz', likes: ['tursu', 'baget', 'ranch'], dislikes: ['domates'],
+    moods: ['uykulu', 'ac', 'aceleci', 'uzgun', 'aysonu', 'maceraci'], base: 35,
+    greet: ['Selam!', 'Kütüphaneden kaçtım.'], quirk: 'Kırmızı, sulu sebzelerle aram yok.',
+    look: { skin: '#e0b08a', hair: '#1f1f1f', style: 'messy', shirt: '#3aa88f', pants: '#2c2c44', backpack: '#d6a13a' } },
+  nevin: { name: 'İpekçi Nevin Hanım', likes: ['rozbif', 'roka', 'avokado'], dislikes: ['ketcap', 'sosis'],
+    moods: ['kutlama', 'hafif', 'asik', 'nostaljik', 'randevu', 'diyet'], base: 40,
+    greet: ['Koza Han’dan geliyorum.', 'Merhaba canım.'], quirk: 'Ben kaliteli şeylerden hoşlanırım.',
+    look: { skin: '#f3cfae', hair: '#7b2d5b', style: 'long', shirt: '#c86bb0', pants: '#4a2f4a', scarfC: '#f2c14e' } },
+  mehmet: { name: 'Bıçakçı Mehmet Usta', likes: ['pastirma', 'biftek', 'somun'], dislikes: ['marul', 'avokado', 'roka'],
+    moods: ['ac', 'usumus', 'nostaljik', 'kutlama', 'mac'], base: 45,
+    greet: ['Kolay gelsin usta!', 'Bıçakları biledim, karnım acıktı.'], quirk: 'Ot yiyecek değilim, et isterim!',
+    look: { skin: '#cf9a6e', hair: '#6b6b6b', style: 'short', shirt: '#8a6a4a', pants: '#3a3a3a', mustache: '#4a4a4a', leather: true } },
+  ozan: { name: 'Kayakçı Ozan', likes: ['sucuk', 'barbeku', 'cheddar'], dislikes: ['zeytin'],
+    moods: ['usumus', 'ac', 'kutlama', 'uykulu', 'maceraci'], base: 35,
+    greet: ['Uludağ’dan yeni indim!', 'Pist harikaydı bugün!'], quirk: 'Siyah, yuvarlak, tuzlu şeylerle aram kötü.',
+    look: { skin: '#efc4a0', hair: '#a0602a', style: 'beanie', hat: '#e04a3a', shirt: '#2f7fd0', pants: '#2a2a3a', goggles: true } },
+  ahmet: { name: 'Karagözcü Ahmet Dede', likes: ['simit', 'beyaz', 'kaymak'], dislikes: ['jalapeno', 'acisos'],
+    moods: ['nostaljik', 'usumus', 'uzgun', 'hafif', 'kahvalti', 'hasta'], base: 55,
+    greet: ['Hay hak!', 'Of of of, yoruldum be Hacivat… pardon, evladım.'], quirk: 'Bu yaşta midem ateşli şeyleri kaldırmaz.',
+    look: { skin: '#e3b58e', hair: '#eeeeee', style: 'fes', shirt: '#3d5a8a', pants: '#3a3030', beard: '#f2f2f2' } },
+  emre: { name: 'Kurye Emre', likes: ['tavuk', 'tost', 'ketcap'], dislikes: ['beyaz'],
+    moods: ['aceleci', 'ac', 'uykulu', 'asik', 'aysonu', 'gece'], base: 30,
+    greet: ['Motor kapıda abi!', 'Teslimat arası!'], quirk: 'Tuzlu, ufalanan peyniri sevmem.',
+    look: { skin: '#d8a476', hair: '#2b2b2b', style: 'cap', hat: '#2f2f2f', shirt: '#f2b21b', pants: '#2a2a3a' } },
+  zeynep: { name: 'Vejetaryen Zeynep', veg: true, likes: ['falafel', 'avokado', 'zeytin'],
+    dislikes: ['sucuk', 'hindiFume', 'tavuk', 'hindiJambon', 'danaSalam', 'kofte', 'teriyaki', 'ton', 'rozbif', 'biftek', 'pastirma'],
+    moods: ['hafif', 'asik', 'uzgun', 'kutlama', 'diyet', 'maceraci'], base: 40,
+    greet: ['Merhaba!', 'Yogadan çıktım.'], quirk: 'Hayvansal etler bana göre değil.',
+    look: { skin: '#f0c9a6', hair: '#2f2f2f', style: 'long', shirt: '#5aa65a', pants: '#6b4a33', glasses: true } },
+  riza: { name: 'Mudanyalı Rıza Reis', likes: ['ton', 'misir', 'salatalik'], dislikes: ['kofte', 'danaSalam'],
+    moods: ['ac', 'usumus', 'nostaljik', 'hafif', 'kahvalti'], base: 45,
+    greet: ['Mudanya’dan geldim evlat.', 'Rastgele!'], quirk: 'Denizden gelen her şeye bayılırım.',
+    look: { skin: '#c98d5e', hair: '#dddddd', style: 'beanie', hat: '#1f4e8c', shirt: '#2f6f9e', pants: '#3a3a3a', beard: '#e6e6e6' } },
+  cem: { name: 'Taraftar Cem', likes: ['kofte', 'acisos', 'sucuk'], dislikes: ['roka', 'avokado'], fan: true,
+    moods: ['mac', 'ac', 'kutlama', 'uzgun', 'aysonu'], base: 35,
+    greet: ['Haydi Bursa!', 'Yeşil-beyaz, en büyük Bursa!'], quirk: 'Ateşli şeyleri severim, tribün gibi!',
+    look: { skin: '#e0b090', hair: '#3a2a20', style: 'short', shirt: '#2f9a4a', pants: '#2a2a3a', scarfC: '#f4f4f4' } },
+  ayse: { name: 'Hemşire Ayşe', likes: ['hindiJambon', 'kasar', 'kepekli'], dislikes: ['sogan', 'sarimsak'],
+    moods: ['gece', 'aceleci', 'usumus', 'hasta', 'diyet', 'uykulu'], base: 35,
+    greet: ['Nöbet değişimi!', 'Merhaba, çabuk olabilir miyim?'], quirk: 'Hastalarımın yanına kokuyla gidemem.',
+    look: { skin: '#f0c4a0', hair: '#6a3a2a', style: 'long', shirt: '#7ac8d8', pants: '#7ac8d8', capC: '#ffffff' } },
+  emma: { name: 'Turist Emma', likes: ['simit', 'kaymak', 'pastirma'], dislikes: ['sucuk'],
+    moods: ['maceraci', 'ac', 'hafif', 'kahvalti', 'bunalmis'], base: 40,
+    greet: ['Merhaba! Ben… turist!', 'Hello! Çok güzel Bursa!'], quirk: 'Ben Türk lezzet seviyorum!',
+    look: { skin: '#f6d8c0', hair: '#f0d070', style: 'long', shirt: '#e8743a', pants: '#3a5a8a', backpack: '#4a8a5a' } },
+  gizemli: { name: 'Gizemli Bey', critic: true, likes: ['pastirma'], dislikes: [], moods: ['gizemli'], base: 40,
+    greet: ['…'], quirk: '',
+    look: { skin: '#e9c4a0', hair: '#444', style: 'hat', hat: '#1d1d1d', shirt: '#3a3030', pants: '#222', sunglasses: true } },
+};
+const KEEPER = { skin: '#e2b088', hair: '#3a2a20', style: 'chef', shirt: '#5b8fd6', pants: '#3a3a48', mustache: '#2b1b12', apron: true };
+
+/* ---- Menü (Subway tarzı klasikler, yerelleştirilmiş) ---- */
+const RECIPES = {
+  karisik:    { name: 'Karışık Tost',        bread: 'tost',  items: ['sucuk', 'kasar'], toast: true, price: 50 },
+  kahvalti:   { name: 'Kahvaltı Simidi',     bread: 'simit', items: ['beyaz', 'domates', 'salatalik'], price: 45 },
+  kulup:      { name: 'Kulüp Sandviç',       items: ['hindiFume', 'hindiJambon', 'kasar', 'marul', 'domates', 'mayonez'], price: 85 },
+  umut:       { name: 'Umut Special',        items: ['hindiFume', 'kasar', 'domates', 'tursu', 'mayonez'], toast: true, price: 70 },
+  sebze:      { name: 'Sebze Keyfi',         items: ['marul', 'domates', 'salatalik', 'yesilBiber', 'zeytin'], price: 55 },
+  italyano:   { name: 'İtalyano',            items: ['danaSalam', 'mozzarella', 'domates', 'zeytin', 'marinara'], toast: true, price: 80 },
+  teriyaki:   { name: 'Teriyaki Tavuk',      items: ['teriyaki', 'marul', 'sogan', 'misir'], price: 80 },
+  tonlu:      { name: 'Ton Balıklı',         items: ['ton', 'marul', 'misir', 'salatalik', 'mayonez'], price: 75 },
+  kofte:      { name: 'Köfte Marinara',      bread: 'baget', items: ['kofte', 'mozzarella', 'marinara'], toast: true, price: 85 },
+  rozbif:     { name: 'Rozbif Roka',         items: ['rozbif', 'cheddar', 'roka', 'ballihardal'], price: 95 },
+  biftek:     { name: 'Biftek & Peynir',     items: ['biftek', 'cheddar', 'yesilBiber', 'sogan'], toast: true, price: 100 },
+  falafel:    { name: 'Falafel Dürüm',       bread: 'lavas', items: ['falafel', 'marul', 'domates', 'tursu', 'sarimsak'], price: 70 },
+  ballikaymak:{ name: 'Ballı Kaymaklı Simit', bread: 'simit', items: ['bal', 'kaymak'], price: 55 },
+  pastirmali: { name: 'Pastırmalı Kaşarlı',  bread: 'somun', items: ['pastirma', 'kasar'], toast: true, price: 90 },
+  barbeku:    { name: 'Barbekü Tavuk',       items: ['tavuk', 'cheddar', 'sogan', 'barbeku'], toast: true, price: 75 },
+};
+
+/* ---- Hava ---- */
+const WEATHER = {
+  gunesli: { emo: '☀️', name: 'Güneşli' },
+  bulutlu: { emo: '☁️', name: 'Bulutlu' },
+  yagmurlu: { emo: '🌧️', name: 'Yağmurlu', boost: { usumus: 2, yagmur: 3, hasta: 2, uzgun: 1.5 } },
+  karli: { emo: '❄️', name: 'Karlı', boost: { usumus: 3, hasta: 2 }, charBoost: { ozan: 3 } },
+  sicak: { emo: '🥵', name: 'Sıcak', boost: { bunalmis: 4, piknik: 2, hafif: 1.5 } },
+};
+
+/* ---- Dükkân: ekipman & dekor ---- */
+const EQUIP = {
+  turbo:   { name: 'Turbo tost makinesi', emo: '⚡', cost: 400, desc: 'Tost iki kat hızlı pişer.' },
+  cay:     { name: 'Çay ocağı',           emo: '🫖', cost: 350, desc: 'Sıradakilere çay ikram edilir: sabır +%30.' },
+  tezgah:  { name: 'Geniş tezgâh',        emo: '🪵', cost: 300, desc: 'Bir sandviçe 6 yerine 9 malzeme koyabilirsin.' },
+  masa:    { name: 'Dördüncü masa',       emo: '🪑', cost: 450, desc: 'İki oturma yeri daha; oturup yiyenler +₺4 bahşiş bırakır.' },
+  pano:    { name: 'Işıklı menü panosu',  emo: '💡', cost: 500, desc: 'Menüden sipariş verenler artar, menü fiyatları +%15.' },
+};
+const DECOR = {
+  saksi:   { name: 'Begonvil saksıları', emo: '🌺', cost: 150, desc: 'Dükkân çiçek açar. İtibar her gün +0.05.' },
+  kedi:    { name: 'Pamuk’un yatağı',    emo: '🐈', cost: 120, desc: 'Pamuk tezgâh önünde yatağında uyur. Sevince minik bahşiş düşer.' },
+  atki:    { name: 'Bursaspor atkısı',   emo: '🟢', cost: 150, desc: 'Taraftar Cem daha sık gelir, maç günü siparişleri artar.', chars: { cem: 3 }, moods: { mac: 2 } },
+  kitap:   { name: 'Kitap rafı',         emo: '📚', cost: 250, desc: 'Öğrenciler, öğretmenler ve turistler daha sık uğrar.', chars: { deniz: 2, selin: 2, emma: 2 } },
+  karagoz: { name: 'Karagöz perdesi',    emo: '🎭', cost: 350, desc: 'Ahmet Dede ve çocuklar bayılır. Bahşişler +%5.', chars: { ahmet: 2.5, ece: 2 } },
+  pikap:   { name: 'Plak çalar',         emo: '🎶', cost: 300, desc: 'Hafif bir Türk sanat müziği. Sabır +%10, âşıklar artar.', moods: { asik: 2, randevu: 2 } },
+  ipek:    { name: 'İpek perde',         emo: '🧣', cost: 400, desc: 'Koza Han’dan ipek. Nevin Hanım sık gelir, kutlamalar artar.', chars: { nevin: 3 }, moods: { kutlama: 1.5 } },
+  neon:    { name: 'Neon “UMUT” yazısı', emo: '✨', cost: 600, desc: 'Akşamları parıldar. 17:00’den sonra daha çok müşteri.' },
+};
+
+window.GameData = { CATS, ING, H, MOODS, CHARS, KEEPER, RECIPES, WEATHER, EQUIP, DECOR };
+
+</script>
+<script>
+/* Umut Sandviç Evi — pixel çizimler (karakterler, kedi, sahne, dekor, hava, malzeme ikonları, tezgâh katmanları) */
+'use strict';
+(() => {
+const { ING, KEEPER } = window.GameData;
+const W = 320, H = 180;
+
+// ---------- renk yardımcıları ----------
+function hex2rgb(h) { h = h.replace('#', ''); return [0, 2, 4].map(i => parseInt(h.substr(i, 2), 16)); }
+function lerpC(a, b, t) { const A = hex2rgb(a), B = hex2rgb(b); return 'rgb(' + A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',') + ')'; }
+function darken(h, k) { const A = hex2rgb(h); return 'rgb(' + A.map(v => Math.max(0, Math.min(255, Math.round(v * k)))).join(',') + ')'; }
+
+let g = null;
+function P(x, y, w, h, c) { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); }
+
+// ---------- karakter ----------
+function drawPerson(ctx, x, y, L, frame, sitting, extra) {
+  x = Math.round(x); y = Math.round(y);
+  const kid = !!L.kid, Ht = kid ? 16 : 20, ox = x - 5, oy = y - Ht + (sitting ? 3 : 0);
+  const R = (a, b, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(ox + a, oy + b, w, h); };
+  const legTop = kid ? 12 : 15, bodyTop = kid ? 7 : 8;
+  if (!sitting) {
+    const lh = Ht - legTop; let l1 = 0, l2 = 0; if (frame === 1) l1 = -1; else if (frame === 3) l2 = -1;
+    R(2, legTop, 2, lh + l1, L.pants); R(6, legTop, 2, lh + l2, L.pants);
+    R(2, legTop + lh + l1 - 1, 2, 1, '#2a1d17'); R(6, legTop + lh + l2 - 1, 2, 1, '#2a1d17');
+  } else R(1, legTop, 8, 2, L.pants);
+  if (L.backpack) R(8, bodyTop + 1, 3, 5, L.backpack);
+  R(1, bodyTop, 8, legTop - bodyTop, L.shirt);
+  const sw = (!sitting && (frame === 1 || frame === 3)) ? 1 : 0;
+  R(0, bodyTop + 1, 1, 4 - sw, L.shirt); R(9, bodyTop + 1, 1, 4, L.shirt);
+  R(0, bodyTop + 5 - sw, 1, 1, L.skin); R(9, bodyTop + 5, 1, 1, L.skin);
+  if (L.tie) { R(3, bodyTop, 4, 1, '#fff'); R(4, bodyTop + 1, 2, legTop - bodyTop - 2, L.tie); }
+  if (L.apron) { R(2, bodyTop + 2, 6, legTop - bodyTop, '#fbfbf5'); R(2, bodyTop + 2, 6, 1, '#e0e0d8'); }
+  if (L.leather) { R(2, bodyTop + 2, 6, legTop - bodyTop, '#6b4226'); R(3, bodyTop + 3, 1, 1, '#c0c0c0'); }
+  if (L.scarfC) { R(2, bodyTop, 6, 2, L.scarfC); R(6, bodyTop + 2, 2, 3, L.scarfC); if (L.scarfC === '#f4f4f4') { R(3, bodyTop, 1, 2, '#2f9a4a'); R(6, bodyTop + 3, 2, 1, '#2f9a4a'); } }
+  if (L.backpack) R(2, bodyTop, 1, legTop - bodyTop, darken(L.backpack, .7));
+  if (extra === 'cay') { R(10, bodyTop + 3, 2, 3, '#c0392b'); R(10, bodyTop + 3, 2, 1, '#f5e6d0'); }
+  // kafa
+  R(2, 1, 6, bodyTop - 1, L.skin);
+  R(3, 4, 1, 1, '#2a1d17'); R(6, 4, 1, 1, '#2a1d17');
+  if (kid) { R(2, 5, 1, 1, '#f39aa0'); R(7, 5, 1, 1, '#f39aa0'); }
+  const h = L.hair;
+  switch (L.style) {
+    case 'short': R(2, 0, 6, 2, h); R(2, 2, 1, 1, h); R(7, 2, 1, 1, h); break;
+    case 'messy': R(1, 0, 8, 2, h); R(2, -1, 2, 1, h); R(5, -1, 2, 1, h); R(1, 2, 1, 2, h); R(8, 2, 1, 1, h); break;
+    case 'long': R(1, 0, 8, 2, h); R(1, 2, 1, 7, h); R(8, 2, 1, 7, h); break;
+    case 'pig': R(2, 0, 6, 2, h); R(0, 2, 2, 3, h); R(8, 2, 2, 3, h); R(1, 2, 1, 1, '#ff5a8a'); R(8, 2, 1, 1, '#ff5a8a'); break;
+    case 'scarf': R(1, -1, 8, 3, h); R(1, 2, 1, 6, h); R(8, 2, 1, 6, h); R(1, bodyTop, 8, 2, h); R(3, 0, 1, 1, darken(h, .75)); R(6, 1, 1, 1, darken(h, .75)); break;
+    case 'beanie': R(1, -1, 8, 3, L.hat); R(1, 1, 8, 1, darken(L.hat, .7)); R(4, -2, 2, 1, '#fff'); R(1, 2, 1, 2, h); R(8, 2, 1, 2, h); break;
+    case 'hat': R(2, -2, 6, 3, L.hat); R(0, 1, 10, 1, L.hat); R(2, 0, 6, 1, '#7a2a2a'); R(2, 2, 1, 1, h); R(7, 2, 1, 1, h); break;
+    case 'cap': R(2, -1, 6, 2, L.hat); R(7, 0, 3, 1, darken(L.hat, .8)); R(2, 1, 1, 2, h); break;
+    case 'chef': R(2, -3, 6, 4, '#fafafa'); R(1, -4, 8, 2, '#fff'); R(2, 0, 6, 1, '#dcdcdc'); R(2, 1, 1, 1, h); R(7, 1, 1, 1, h); break;
+    case 'fes': R(3, -2, 4, 3, '#b01e2a'); R(3, -2, 4, 1, '#c8323e'); R(6, -1, 1, 3, '#1a1a1a'); R(2, 1, 1, 2, h); R(7, 1, 1, 2, h); break;
+  }
+  if (L.capC) { R(3, -1, 4, 2, L.capC); R(4, -1, 2, 1, '#e23b3b'); }
+  if (L.band) R(2, 2, 6, 1, L.band);
+  if (L.goggles) { R(2, 0, 6, 1, '#ffb43a'); R(3, 0, 1, 1, '#7ad0ff'); R(6, 0, 1, 1, '#7ad0ff'); }
+  if (L.glasses) { R(2, 4, 2, 1, '#333'); R(5, 4, 2, 1, '#333'); R(4, 4, 1, 1, '#333'); R(3, 4, 1, 1, '#bfe3ff'); R(6, 4, 1, 1, '#bfe3ff'); }
+  if (L.sunglasses) { R(2, 3, 6, 2, '#111'); R(3, 3, 1, 1, '#555'); }
+  if (L.mustache) R(3, 6, 4, 1, L.mustache);
+  if (L.beard) { R(2, 6, 6, 2, L.beard); R(3, 8, 4, 1, L.beard); }
+}
+
+// ---------- kedi ----------
+function drawCat(x, y, dir, state, frame) {
+  x = Math.round(x); y = Math.round(y);
+  const C = (dx, dy, w, h, c) => { g.fillStyle = c; g.fillRect(dir > 0 ? x + dx : x - dx - w, y + dy, w, h); };
+  const o = '#ec9a45', d = '#c46d26', w = '#fff3e0', k = '#2a1d17', pk = '#f08a9a';
+  if (state === 'sleep') {
+    C(-5, -4, 10, 4, o); C(-3, -4, 1, 2, d); C(0, -4, 1, 2, d); C(-4, -1, 8, 1, '#c98340');
+    C(2, -6, 5, 4, o); C(2, -7, 1, 1, o); C(6, -7, 1, 1, o); C(4, -4, 2, 1, k); C(-7, -2, 3, 2, o); C(-7, -2, 1, 1, w);
+  } else if (state === 'sit') {
+    C(-3, -7, 6, 7, o); C(-1, -5, 3, 4, w); C(-2, -6, 1, 2, d);
+    C(-1, -12, 6, 5, o); C(-1, -13, 1, 1, o); C(4, -13, 1, 1, o); C(0, -12, 1, 1, pk); C(3, -12, 1, 1, pk);
+    C(1, -10, 1, 1, k); C(3, -10, 1, 1, k); C(2, -9, 1, 1, pk); C(-6, -1, 4, 1, o); C(-6, -2, 1, 1, o); C(0, -1, 1, 1, w); C(2, -1, 1, 1, w);
+  } else {
+    C(-4, -6, 8, 4, o); C(-2, -6, 1, 2, d); C(0, -6, 1, 2, d); C(-3, -3, 6, 1, w);
+    if (frame % 2 === 0) { C(-4, -2, 1, 2, o); C(2, -2, 1, 2, o); C(-2, -2, 1, 2, d); C(3, -2, 1, 2, d); }
+    else { C(-3, -2, 1, 2, o); C(3, -2, 1, 2, o); C(-4, -2, 1, 1, d); C(1, -2, 1, 2, d); }
+    C(3, -9, 5, 4, o); C(3, -10, 1, 1, o); C(7, -10, 1, 1, o); C(4, -9, 1, 1, pk); C(6, -8, 1, 1, k); C(8, -7, 1, 1, pk);
+    const tl = frame % 2; C(-6, -9 + tl, 1, 4 - tl, o); C(-5, -6, 1, 1, o); C(-6, -10 + tl, 1, 1, d);
+  }
+}
+
+// ---------- sahne ----------
+const SKY = [[480, '#a6d6f0'], [720, '#82c4f0'], [960, '#9ccbe8'], [1050, '#f3b56b'], [1140, '#d9776a'], [1200, '#3d3566']];
+function skyColor(m, weather) {
+  let c = SKY[SKY.length - 1][1];
+  for (let i = 0; i < SKY.length - 1; i++) { const [a, ca] = SKY[i], [b, cb] = SKY[i + 1]; if (m <= b) { c = lerpC(ca, cb, Math.max(0, (m - a) / (b - a))); break; } }
+  if (['bulutlu', 'yagmurlu', 'karli'].includes(weather)) {
+    const A = c.match(/\d+/g).map(Number), gr = weather === 'yagmurlu' ? '#7d8794' : weather === 'karli' ? '#b8c2cc' : '#a3b3c2';
+    const B = hex2rgb(gr); c = 'rgb(' + A.map((v, i) => Math.round(v + (B[i] - v) * .65)).join(',') + ')';
+  }
+  return c;
+}
+const nightK = m => Math.max(0, Math.min(1, (m - 1040) / 160));
+const MTN = [[0, 30], [40, 20], [80, 14], [118, 6], [150, 2], [176, 9], [205, 5], [240, 13], [280, 18], [320, 24]];
+function mtnY(x) { for (let i = 0; i < MTN.length - 1; i++) { const [a, ya] = MTN[i], [b, yb] = MTN[i + 1]; if (x <= b) return ya + (yb - ya) * (x - a) / (b - a); } return 24; }
+
+function txt(s, x, y, size, color, font = 'VT323', align = 'center') {
+  g.font = `${size}px ${font === 'VT323' ? 'VT323' : '"Pixelify Sans"'}`; g.fillStyle = color; g.textAlign = align; g.textBaseline = 'middle'; g.fillText(s, x, y);
+}
+
+function drawBackground(st) {
+  const m = st.minutes, wx = st.weather;
+  g.fillStyle = skyColor(m, wx); g.fillRect(0, 0, W, 112);
+  if (!['yagmurlu', 'karli', 'bulutlu'].includes(wx)) {
+    const t = (m - 480) / 720, sx = 30 + t * 260, sy = 24 - Math.sin(t * Math.PI) * 20, r = wx === 'sicak' ? 1 : 0;
+    g.fillStyle = m > 1050 ? '#ffb36b' : (wx === 'sicak' ? '#fff0a0' : '#fff2b0');
+    g.fillRect(sx - 3 - r, sy - 3 - r, 7 + 2 * r, 7 + 2 * r); g.fillRect(sx - 4 - r, sy - 2, 9 + 2 * r, 5); g.fillRect(sx - 2, sy - 4 - r, 5, 9 + 2 * r);
+  }
+  const mc = m > 1080 ? '#544f78' : '#6e8fb2', snow = m > 1080 ? '#c9c4e0' : '#f4f8fb';
+  for (let x = 0; x < W; x++) {
+    const y = Math.round(mtnY(x)); P(x, y, 1, 50 - y, mc);
+    const sl = Math.round(10 + Math.sin(x * .35) * 1.5 + Math.sin(x * .11) * 1.2 + (wx === 'karli' ? 8 : 0));
+    if (y < sl) P(x, y, 1, sl - y, snow);
+    if (x % 9 < 2 && y < sl + 5) P(x, Math.max(y, sl), 1, 3, m > 1080 ? '#8f8ab0' : '#a9c0d6');
+  }
+  // Ulu Cami (çok kubbeli)
+  const sil = m > 1080 ? '#4a4566' : '#9cb4c8';
+  P(246, 20, 58, 16, sil);
+  for (let i = 0; i < 5; i++) { P(248 + i * 11, 17, 9, 3, sil); P(250 + i * 11, 16, 5, 1, sil); P(252 + i * 11, 14, 1, 2, sil); }
+  P(243, 4, 3, 32, sil); P(242, 9, 5, 1, sil); P(244, 2, 1, 2, sil); P(305, 6, 3, 30, sil); P(304, 11, 5, 1, sil); P(306, 4, 1, 2, sil);
+  // bulutlar
+  if (wx !== 'gunesli' && wx !== 'sicak') {
+    const cc = wx === 'yagmurlu' ? '#8c96a3' : '#e8eef4', t = performance.now() / 1000;
+    for (let i = 0; i < 5; i++) { const cx = ((i * 83 + t * (3 + i)) % 380) - 40, cy = 4 + (i * 7) % 14;
+      P(cx, cy + 2, 26, 5, cc); P(cx + 4, cy, 14, 3, cc); P(cx + 14, cy - 1, 8, 2, cc); }
+  } else {
+    const t = performance.now() / 1000;
+    for (let i = 0; i < 2; i++) { const cx = ((i * 160 + t * 2) % 380) - 40; P(cx, 8 + i * 6, 20, 3, '#ffffff'); P(cx + 4, 6 + i * 6, 10, 2, '#ffffff'); }
+  }
+  // güvercinler
+  st.birds.forEach(b => { const f = Math.floor(performance.now() / 250 + b.x) % 2, c = '#6f7686';
+    P(b.x, b.y + f, 1, 1, c); P(b.x + 1, b.y + 1 - f, 1, 1, c); P(b.x + 2, b.y + 1, 1, 1, c); P(b.x + 3, b.y + 1 - f, 1, 1, c); P(b.x + 4, b.y + f, 1, 1, c); });
+  // komşular
+  const lit = m > 1080;
+  P(0, 30, 48, 82, '#c98463'); P(0, 30, 48, 3, '#a86a4c');
+  P(272, 34, 48, 78, '#8fae9b'); P(272, 34, 48, 3, '#6f8e7b');
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) {
+    P(5 + c * 14, 38 + r * 18, 9, 12, (lit && (r + c) % 2 === 0) ? '#ffd77a' : '#5e4a5a'); P(5 + c * 14, 50 + r * 18, 9, 1, '#e8d0b0');
+    P(277 + c * 14, 42 + r * 16, 9, 11, (lit && (r + c) % 2 === 1) ? '#ffd77a' : '#4e5e6a'); P(277 + c * 14, 53 + r * 16, 9, 1, '#d8e8d8');
+  }
+  P(2, 72, 44, 7, '#5a3520'); txt('KESTANE ŞEKERİ', 24, 75.8, 4, '#ffe2a8');
+  for (let x = 2; x < 46; x += 4) P(x, 79, 4, 4, ((x - 2) / 4) % 2 ? '#f3efe0' : '#7a3e22');
+  P(4, 85, 40, 22, '#d9ecf2'); P(4, 85, 40, 1, '#9cb8c2'); P(4, 95, 40, 1, '#a88a6a'); P(4, 105, 40, 1, '#a88a6a');
+  [[7, '#7a3e1a'], [14, '#8a4a22'], [21, '#7a3e1a'], [28, '#f2c14e'], [35, '#8a4a22']].forEach(([x, c], i) => { P(x, 89, 5, 6, '#eef6f8'); P(x + 1, 91, 3, 3, c); P(x, 99, 5, 6, '#eef6f8'); P(x + 1, 101, 3, 3, i % 2 ? '#7a3e1a' : '#c0392b'); });
+  P(2, 107, 44, 5, '#6b4a33');
+  P(274, 72, 44, 7, '#2f3f6a'); txt('İPEK & HAVLU', 296, 75.8, 4, '#f2e6ff');
+  for (let x = 274; x < 318; x += 4) P(x, 79, 4, 4, ((x - 274) / 4) % 2 ? '#f3efe0' : '#7b2d5b');
+  P(276, 85, 40, 22, '#e6f0f2');
+  [['#e04a3a', 279], ['#f2c14e', 286], ['#3aa88f', 293], ['#7b6bd0', 300], ['#ff8fb1', 307]].forEach(([c, x]) => { P(x, 98, 6, 2, c); P(x, 100, 6, 2, darken(c, .85)); P(x, 102, 6, 2, c); });
+  P(282, 86, 1, 10, '#c86bb0'); P(283, 87, 1, 10, '#f2c14e'); P(284, 86, 1, 9, '#c86bb0'); P(298, 86, 10, 1, '#6b4a33'); P(300, 87, 2, 9, '#3aa88f'); P(304, 87, 2, 8, '#e04a3a');
+  P(274, 107, 44, 5, '#6b4a33');
+}
+
+function drawShop(st) {
+  const m = st.minutes, D = st.decor, E = st.equip;
+  P(48, 24, 224, 88, '#ecd9b2'); P(48, 24, 224, 2, '#c9ad7f');
+  for (let y = 28; y < 110; y += 8) for (let x = 50 + ((y / 8) % 2) * 6; x < 270; x += 12) P(x, y, 1, 1, '#dcc596');
+  P(78, 26, 164, 13, '#1f4f7a'); P(78, 26, 164, 1, '#3f7fb0'); P(78, 38, 164, 1, '#123050'); P(80, 28, 160, 9, '#245a8a');
+  txt('UMUT SANDVİÇ EVİ', 160, 32.6, 9, '#ffd35c', 'px'); txt('♥', 88, 32.6, 9, '#ff7a6a', 'px'); txt('♥', 232, 32.6, 9, '#ff7a6a', 'px');
+  P(52, 30, 22, 6, '#1f4fa0'); P(52, 30, 22, 1, '#fff'); P(52, 35, 22, 1, '#fff'); txt('Ulucami Cd.', 63, 33.1, 3.5, '#fff');
+  // iç mekân
+  P(76, 48, 168, 48, lerpC('#f4d9a8', '#f7cf8a', nightK(m))); P(76, 80, 168, 16, '#d7e3e0');
+  for (let x = 76; x < 244; x += 6) P(x, 80, 1, 16, '#c2d1cd'); for (let y = 86; y < 96; y += 6) P(76, y, 168, 1, '#c2d1cd');
+  // Türk bayrağı
+  P(84, 51, 1, 20, '#6b4a33'); P(85, 51, 26, 17, '#e30a17');
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(94, 59.5, 5, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#e30a17'; g.beginPath(); g.arc(95.4, 59.5, 4, 0, Math.PI * 2); g.fill();
+  g.save(); g.translate(101.2, 59.5); g.fillStyle = '#fff'; g.beginPath();
+  for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * 2 * Math.PI / 5, b = a + Math.PI / 5; g.lineTo(Math.cos(a) * 2.6, Math.sin(a) * 2.6); g.lineTo(Math.cos(b) * 1.05, Math.sin(b) * 1.05); }
+  g.closePath(); g.fill(); g.restore(); P(85, 67, 26, 1, '#b8000f');
+  // Atatürk portresi
+  P(207, 51, 20, 24, '#a07818'); P(208, 52, 18, 22, '#d8b23a'); P(210, 54, 14, 18, '#3c4048');
+  P(214, 57, 6, 7, '#e6c4a0'); P(214, 56, 6, 2, '#c9c2b6'); P(213, 57, 1, 3, '#c9c2b6'); P(220, 57, 1, 2, '#c9c2b6');
+  P(215, 60, 1, 1, '#3a6fb0'); P(218, 60, 1, 1, '#3a6fb0'); P(215, 59, 1, 1, '#7a6a5a'); P(218, 59, 1, 1, '#7a6a5a');
+  P(212, 64, 10, 8, '#1e1e22'); P(216, 64, 2, 3, '#f2f2f2'); P(216, 65, 2, 1, '#1e1e22'); P(214, 64, 1, 3, '#2c2c32'); P(219, 64, 1, 3, '#2c2c32');
+  // menü panosu
+  if (E.has('pano')) { P(128, 49, 66, 30, '#ffd35c'); for (let x = 129; x < 194; x += 4) P(x, 49, 2, 1, (Math.floor(performance.now() / 300) + x) % 8 < 4 ? '#fff6c0' : '#e8a020'); }
+  P(130, 51, 62, 26, '#5b3a26'); P(132, 53, 58, 22, '#24392f');
+  txt('MENÜ', 161, 57.5, 6, '#f3efe0');
+  txt('Tost ........... ₺50', 135, 63, 4.5, '#f3efe0', 'VT323', 'left'); txt('Sandviç ........ ₺70', 135, 67.5, 4.5, '#f3efe0', 'VT323', 'left'); txt('Çay / Ayran .... ₺15', 135, 72, 4.5, '#f3efe0', 'VT323', 'left');
+  // kitap rafı
+  if (D.has('kitap')) { P(229, 50, 14, 24, '#7a4c2c'); P(230, 51, 12, 22, '#5a3820');
+    [[52, ['#c0392b', '#2f6f9e', '#f1c40f', '#27ae60', '#8e44ad', '#e67e22']], [60, ['#2f6f9e', '#e67e22', '#c0392b', '#16a085', '#f1c40f']], [68, ['#8e44ad', '#27ae60', '#c0392b', '#2f6f9e']]].forEach(([y, cs]) => { let x = 231; cs.forEach((c, i) => { const w = i % 3 === 0 ? 2 : 1; if (x + w <= 241) P(x, y + (i % 2), w, 6 - (i % 2), c); x += w + (i % 4 === 3 ? 1 : 0); }); P(230, y + 6, 12, 1, '#7a4c2c'); }); }
+  // arka tezgâh
+  P(76, 82, 168, 14, '#9b6a43'); P(76, 82, 168, 2, '#b98457');
+  P(196, 77, 10, 5, '#e8e8e8'); P(197, 74, 8, 3, '#cfe6f2'); P(199, 73, 4, 1, '#cfe6f2'); P(198, 72, 6, 1, '#c0c0c0');
+  [[226, '#c0392b'], [230, '#f1c40f'], [234, '#27ae60'], [238, '#e67e22']].forEach(([x, c]) => { P(x, 76, 3, 6, c); P(x, 75, 3, 1, '#eee'); });
+  P(90, 78, 18, 4, '#a8743a'); P(91, 75, 5, 3, '#e0a35a'); P(96, 74, 6, 4, '#d39350'); P(102, 76, 5, 2, '#f0e0c0');
+  if (E.has('cay')) { P(186, 72, 7, 10, '#c8a040'); P(187, 70, 5, 2, '#d8b050'); P(188, 69, 3, 1, '#a07818'); P(185, 76, 1, 2, '#6b4a33');
+    for (let i = 0; i < 3; i++) { P(207 + i * 4, 78, 2, 4, '#c0392b'); P(207 + i * 4, 78, 2, 1, '#f5e6d0'); } }
+  if (D.has('pikap')) { P(139, 78, 16, 4, '#6b3a1e'); P(140, 77, 12, 1, '#222'); P(143, 77, 6, 1, '#d8432f'); P(153, 76, 1, 2, '#c0c0c0');
+    if (Math.floor(performance.now() / 500) % 2) txt('♪', 156, 72 - (performance.now() / 300) % 4, 5, '#7a3e22'); }
+  // tost makinesi
+  const hot = st.toasting > 0, turbo = E.has('turbo');
+  P(163, 75, 20, 7, turbo ? '#c0392b' : '#8b8f94'); P(163, 74, 20, 2, turbo ? '#e05a4a' : '#b5b9be'); P(165, 79, 16, 1, '#5e6266');
+  P(180, 77, 2, 2, hot ? '#ff4d3d' : '#5a2020'); P(159, 78, 4, 1, '#3a3a3a'); if (turbo) { P(171, 76, 2, 1, '#ffd35c'); P(172, 77, 1, 1, '#ffd35c'); }
+  drawPerson(g, 120, 96, KEEPER, hot ? (Math.floor(performance.now() / 200) % 2 ? 1 : 3) : 0, false);
+  // ipek perde
+  if (D.has('ipek')) { for (let i = 0; i < 6; i++) { P(76 + i, 48, 1, 30 - i * 4, i % 2 ? '#c86bb0' : '#7b2d5b'); P(243 - i, 48, 1, 30 - i * 4, i % 2 ? '#f2c14e' : '#c86bb0'); } P(76, 48, 168, 2, '#7b2d5b'); }
+  // tente
+  for (let x = 68; x < 252; x += 8) { const w = ((x - 68) / 8) % 2; P(x, 39, 8, 8, w ? '#fff' : '#d8432f'); P(x + 1, 47, 6, 1, w ? '#f0f0f0' : '#c23826'); P(x + 2, 48, 4, 1, w ? '#e6e6e6' : '#b03020'); }
+  P(68, 38, 184, 1, '#8a2a1c');
+  if (st.weather === 'karli') { P(68, 37, 184, 2, '#ffffff'); P(78, 25, 164, 1, '#ffffff'); }
+  // açık/kapalı
+  P(55, 52, 1, 6, '#6b4a33'); P(51, 58, 10, 6, st.closing ? '#7a2a2a' : '#3f8f6a'); txt(st.closing ? 'KAPALI' : 'AÇIK', 56, 61.2, 4, '#fff');
+  // karagöz perdesi
+  if (D.has('karagoz')) { P(49, 68, 24, 20, '#7a4c2c'); P(51, 70, 20, 16, '#fff6dc');
+    const b = Math.floor(performance.now() / 400) % 2;
+    P(55, 75 - b, 3, 3, '#c0392b'); P(54, 78 - b, 5, 5, '#2f6f9e'); P(55, 74 - b, 3, 1, '#222');
+    P(64, 75 + b, 3, 3, '#27ae60'); P(63, 78 + b, 5, 5, '#d8a020'); P(64, 74 + b, 3, 1, '#c0392b'); txt('KARAGÖZ', 61, 89.5, 3.5, '#fff6dc'); }
+  // neon
+  if (D.has('neon')) { const on = m > 1000 || Math.floor(performance.now() / 700) % 2; const c = on ? '#ff5ab4' : '#a04a7a';
+    P(247, 54, 22, 9, '#2a1d2a'); txt('UMUT', 258, 58.8, 6, c, 'px');
+    if (on && m > 1000) { g.globalCompositeOperation = 'lighter'; P(246, 53, 24, 11, 'rgba(255,90,180,.18)'); g.globalCompositeOperation = 'source-over'; } }
+  // begonvil
+  if (D.has('saksi')) { [[50, 74], [246, 272]].forEach(([a, b]) => { for (let x = a; x < b; x += 3) { const y = 40 + ((x * 7) % 9); P(x, y, 2, 2, '#e04a9a'); P(x + 1, y + 3, 1, 3, '#4f9a46'); } }); }
+  P(74, 48, 2, 48, '#7a5232'); P(244, 48, 2, 48, '#7a5232');
+}
+
+function drawCounterFront(st) {
+  P(70, 92, 180, 4, '#c48a55'); P(70, 92, 180, 1, '#dba06a'); P(72, 96, 176, 16, '#8e5b36');
+  for (let x = 72; x < 248; x += 12) P(x, 96, 1, 16, '#7a4c2c'); P(72, 96, 176, 1, '#6a3f22');
+  if (st.equip.has('tezgah')) { P(204, 90, 30, 2, '#e0b080'); P(204, 89, 30, 1, '#f0c890'); }
+  if (st.decor.has('atki')) { for (let x = 140; x < 196; x += 4) P(x, 98, 4, 5, ((x - 140) / 4) % 2 ? '#ffffff' : '#2f9a4a'); for (let x = 140; x < 196; x += 2) P(x, 103, 1, 2, '#2f9a4a'); txt('BURSA', 168, 100.6, 4, '#123'); }
+  P(238, 99, 5, 5, '#1f5fbf'); P(239, 100, 3, 3, '#fff'); P(240, 101, 1, 1, '#1f5fbf'); P(240, 97, 1, 2, '#6b4a33');
+}
+
+function drawGround(st) {
+  const snow = st.weather === 'karli', wet = st.weather === 'yagmurlu';
+  P(0, 112, W, 58, snow ? '#d8dde2' : wet ? '#9c978c' : '#bdb6a6');
+  const line = snow ? '#c4cad0' : wet ? '#86817a' : '#a8a090';
+  for (let y = 112; y < 170; y += 10) P(0, y, W, 1, line);
+  for (let y = 112; y < 170; y += 10) for (let x = ((y / 10) % 2) * 10; x < W; x += 20) P(x, y, 1, 10, line);
+  if (wet) [[30, 150], [110, 128], [230, 160], [290, 132]].forEach(([x, y]) => { P(x, y, 14, 2, '#7d93a8'); P(x + 2, y, 6, 1, '#a8bccc'); });
+  if (snow) for (let i = 0; i < 40; i++) P((i * 53) % W, 114 + (i * 31) % 54, 3, 1, '#ffffff');
+  P(0, 168, W, 3, '#8e8778'); P(0, 171, W, 9, wet ? '#3a3a44' : '#4a4a52'); for (let x = 4; x < W; x += 26) P(x, 175, 12, 1, '#e8e2c8');
+  [[60, 118], [258, 118]].forEach(([x, y]) => { P(x - 5, y - 1, 11, 8, '#c46a3a'); P(x - 6, y - 1, 13, 2, '#d98050');
+    P(x - 4, y - 7, 9, 6, '#4f9a46'); P(x - 5, y - 5, 2, 3, '#3f8a3a'); P(x + 4, y - 6, 2, 3, '#3f8a3a');
+    [[-3, -8], [1, -9], [3, -6], [-1, -5]].forEach(([dx, dy]) => P(x + dx, y + dy, 2, 2, st.decor.has('saksi') ? '#e04a9a' : '#e2324a')); });
+  if (st.decor.has('kedi')) { P(88, 122, 16, 5, '#c0392b'); P(89, 121, 14, 1, '#e05a4a'); P(90, 123, 12, 2, '#f5d6c0'); }
+}
+
+function drawTablesBack(seats) { seats.forEach(s => { P(s.x - 3, s.y - 4, 7, 2, '#7a4c2c'); P(s.x - 3, s.y - 2, 1, 4, '#5a3820'); P(s.x + 3, s.y - 2, 1, 4, '#5a3820'); }); }
+function drawTablesFront(tables, seats) {
+  tables.forEach(t => {
+    P(t - 9, 149, 18, 3, '#d9a066'); P(t - 9, 151, 18, 1, '#a87444'); P(t - 1, 152, 2, 12, '#6b4a33'); P(t - 4, 164, 8, 1, '#6b4a33');
+    seats.filter(s => s.t === t && s.occ && s.occ.state === 'eat').forEach(s => { const side = s.x < t ? -1 : 1, fx = t + side * 5;
+      P(fx - 2, 147, 5, 2, '#e0a35a'); P(fx - 2, 146, 5, 1, '#f7c93b'); P(t - side - 1, 145, 2, 4, '#c0392b'); P(t - side - 1, 145, 2, 1, '#f5f5f5'); });
+  });
+}
+
+function drawWeather(st) {
+  const t = performance.now() / 1000;
+  if (st.weather === 'yagmurlu') { g.fillStyle = 'rgba(200,215,235,.7)';
+    for (let i = 0; i < 70; i++) { const x = (i * 47 + t * 40) % W, y = (i * 29 + t * 160) % H; g.fillRect(Math.round(x), Math.round(y), 1, 4); } }
+  if (st.weather === 'karli') { g.fillStyle = '#ffffff';
+    for (let i = 0; i < 60; i++) { const x = (i * 53 + Math.sin(t + i) * 6 + t * 6) % W, y = (i * 37 + t * 14) % H; g.fillRect(Math.round(x), Math.round(y), 1, 1); } }
+  if (st.weather === 'sicak') { g.fillStyle = 'rgba(255,200,80,.06)'; g.fillRect(0, 0, W, H); }
+}
+function drawNight(st) {
+  const nk = nightK(st.minutes); if (nk <= 0) return;
+  g.fillStyle = `rgba(25,20,60,${nk * .38})`; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'lighter';
+  for (let x = 72; x < 250; x += 10) { g.fillStyle = `rgba(255,200,90,${nk * .25})`; g.fillRect(x - 2, 47, 5, 5); }
+  g.fillStyle = `rgba(255,190,90,${nk * .12})`; g.fillRect(76, 48, 168, 48);
+  if (st.decor.has('neon')) { g.fillStyle = `rgba(255,90,180,${nk * .2})`; g.fillRect(244, 50, 28, 16); }
+  g.globalCompositeOperation = 'source-over'; g.fillStyle = '#ffe28a'; for (let x = 72; x < 250; x += 10) g.fillRect(x, 49, 1, 1);
+}
+
+function bubble(x, y, text, bg = '#fff') {
+  g.font = '7px VT323'; const w = Math.ceil(g.measureText(text).width) + 6, bx = Math.round(x - w / 2), by = Math.round(y - 11);
+  P(bx, by, w, 9, '#2a1d17'); P(bx + 1, by + 1, w - 2, 7, bg); P(Math.round(x) - 1, by + 9, 3, 1, '#2a1d17'); P(Math.round(x), by + 10, 1, 1, '#2a1d17');
+  g.fillStyle = '#2a1d17'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, x, by + 4.8);
+}
+
+// ---------- malzeme ikonları ----------
+function icon(id) {
+  const c = document.createElement('canvas'); c.width = 32; c.height = 32; const x = c.getContext('2d'); x.scale(2, 2);
+  const R = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
+  const it = ING[id];
+  if (it.bread) {
+    const b = it.bread;
+    switch (b.style) {
+      case 'slice': R(2, 2, 12, 12, b.crust); R(3, 4, 10, 9, b.inner); break;
+      case 'baget': R(0, 7, 16, 4, b.crust); R(1, 6, 14, 1, b.crust); [3, 7, 11].forEach(a => R(a, 7, 2, 1, b.inner)); break;
+      case 'seed': R(3, 3, 10, 10, b.crust); x.clearRect(6, 6, 4, 4); [[4, 4], [8, 3], [11, 5], [12, 9], [9, 12], [4, 11], [3, 8]].forEach(([a, bb]) => R(a, bb, 1, 1, '#fbefd0')); break;
+      case 'flour': R(1, 6, 14, 6, b.crust); R(2, 5, 12, 1, b.crust); [[3, 7], [7, 6], [11, 7], [5, 9], [10, 10]].forEach(([a, bb]) => R(a, bb, 2, 1, '#fbf6ea')); break;
+      case 'grain': R(2, 4, 12, 9, b.crust); R(3, 3, 10, 1, b.crust); [[4, 6], [8, 5], [11, 8], [6, 10], [10, 11]].forEach(([a, bb]) => R(a, bb, 1, 1, '#e8d0a0')); break;
+      case 'herb': R(1, 5, 14, 7, b.crust); R(2, 4, 12, 1, b.crust); [[3, 6], [7, 7], [11, 6]].forEach(([a, bb]) => R(a, bb, 1, 1, '#4f9a46')); [[5, 9], [10, 9]].forEach(([a, bb]) => R(a, bb, 2, 1, '#f7c93b')); break;
+      case 'wrap': R(1, 4, 14, 9, b.crust); R(2, 5, 12, 7, b.inner); [[4, 6], [9, 9], [11, 6]].forEach(([a, bb]) => R(a, bb, 1, 1, '#c8a060')); break;
+      default: R(2, 4, 12, 9, b.crust); R(3, 3, 10, 1, b.crust); R(4, 6, 8, 6, b.inner);
+    }
+    return c;
+  }
+  const c1 = it.c1, c2 = it.c2;
+  switch (it.shape) {
+    case 'rounds': R(3, 3, 10, 10, c1); R(2, 5, 12, 6, c1); R(5, 6, 2, 1, c2); R(9, 9, 2, 1, c2); R(7, 4, 1, 1, c2); break;
+    case 'fold': R(2, 4, 12, 4, c1); R(3, 8, 11, 4, darken(c1, .92)); R(2, 4, 12, 1, c2); R(3, 8, 11, 1, c2); break;
+    case 'strips': for (let i = 0; i < 3; i++) { R(2, 3 + i * 4, 12, 3, c1); R(4 + i * 2, 3 + i * 4, 1, 3, c2); R(9, 3 + i * 4, 1, 3, c2); } break;
+    case 'egg': R(3, 3, 10, 10, c1); R(4, 2, 8, 1, c1); R(6, 6, 4, 4, c2); break;
+    case 'sheet': R(2, 4, 12, 9, c1); R(2, 4, 12, 2, c2); R(5, 8, 2, 2, darken(c1, .9)); break;
+    case 'chunks': [[2, 5, 5, 4], [8, 4, 6, 5], [4, 10, 7, 4]].forEach(([a, b, w, h]) => { R(a, b, w, h, c1); R(a, b, w, 1, c2); }); break;
+    case 'balls': [[2, 7], [8, 7], [5, 3]].forEach(([a, b]) => { R(a, b, 6, 5, c1); R(a + 1, b - 1, 4, 1, c1); R(a + 1, b, 2, 1, c2); }); break;
+    case 'dots': for (let i = 0; i < 14; i++) R(3 + (i * 5) % 10, 5 + (i * 3) % 8, 2, 2, i % 3 ? c1 : c2); break;
+    case 'leaf': R(2, 6, 12, 6, c1); R(4, 4, 8, 2, c2); R(3, 8, 10, 1, darken(c1, .8)); R(7, 5, 1, 7, '#c8f0a8'); break;
+    case 'rings': [[2, 4], [7, 8]].forEach(([a, b]) => { R(a, b, 7, 5, c1); R(a + 2, b + 1, 3, 3, c2); }); break;
+    case 'drizzle': R(5, 4, 6, 10, c1); R(6, 2, 4, 2, '#f5f5f5'); R(7, 1, 2, 1, '#f5f5f5'); R(6, 7, 4, 3, '#ffffff'); R(7, 8, 2, 1, c2); break;
+    case 'spread': R(4, 5, 8, 9, c1); R(3, 3, 10, 2, '#c48a55'); R(5, 6, 2, 6, c2); break;
+  }
+  return c;
+}
+
+// ---------- tezgâh: sandviç yığını ----------
+function drawStack(cv, sw, scale) {
+  const sg = cv.getContext('2d'); sg.imageSmoothingEnabled = false; sg.setTransform(scale, 0, 0, scale, 0, 0);
+  const SP = (x, y, w, h, c) => { sg.fillStyle = c; sg.fillRect(Math.round(x), Math.round(y), w, h); };
+  SP(0, 0, 120, 74, '#e8cf9c'); for (let y = 6; y < 58; y += 10) SP(0, y, 120, 1, '#dcc08a');
+  SP(0, 62, 120, 12, '#c48a55'); SP(0, 62, 120, 1, '#dba06a'); for (let x = 0; x < 120; x += 20) SP(x, 63, 1, 11, '#a87444');
+  SP(10, 60, 100, 3, '#fff'); SP(14, 63, 92, 2, '#e2dccd'); SP(10, 59, 100, 1, '#f0ece2');
+  if (!sw.bread) { sg.fillStyle = '#8a6a4a'; sg.font = '8px VT323'; sg.textAlign = 'center'; sg.textBaseline = 'middle'; sg.fillText('önce ekmek seç…', 60, 38); return; }
+  const b = ING[sw.bread].bread, tk = sw.toasted ? .78 : 1, crust = darken(b.crust, tk), inner = darken(b.inner, sw.toasted ? .88 : 1), cx = 60, w = b.w;
+  let y = 59;
+  const bh = Math.max(2, Math.round(6 * b.hk));
+  if (b.style === 'slice') { SP(cx - w / 2, y - bh, w, bh, inner); SP(cx - w / 2, y - bh, 1, bh, crust); SP(cx + w / 2 - 1, y - bh, 1, bh, crust); SP(cx - w / 2, y - 1, w, 1, crust); }
+  else { SP(cx - w / 2 + 1, y - bh, w - 2, bh, crust); SP(cx - w / 2, y - bh + 1, w, Math.max(1, bh - 2), crust); SP(cx - w / 2 + 2, y - bh, w - 4, Math.min(2, bh), inner); }
+  y -= bh;
+  // katmanların sıkışması: çok malzemede inceltilir
+  const squash = sw.fills.length > 6 ? .75 : 1;
+  sw.fills.forEach((f, idx) => { y -= layer(SP, f, cx, y, w - 4, sw.toasted, idx) * squash; });
+  const th = Math.max(3, Math.round(8 * b.hk));
+  if (b.style === 'slice') { SP(cx - w / 2, y - th, w, th, inner); SP(cx - w / 2, y - th, w, 1, crust); SP(cx - w / 2, y - th, 1, th, crust); SP(cx + w / 2 - 1, y - th, 1, th, crust); SP(cx - w / 2 + 1, y - th - 1, w - 2, 1, crust); }
+  else if (b.style === 'wrap') { SP(cx - w / 2, y - th, w, th, crust); SP(cx - w / 2 + 2, y - th + 1, w - 4, 1, inner); SP(cx - w / 2 - 2, y - th + 1, 3, th + 2, crust); SP(cx + w / 2 - 1, y - th + 1, 3, th + 2, crust); }
+  else { SP(cx - w / 2 + 1, y - 3, w - 2, 3, inner); SP(cx - w / 2, y - th, w, th - 3, crust); SP(cx - w / 2 + 3, y - th - 2, w - 6, 2, crust); SP(cx - w / 2 + 3, y - th - 2, w - 6, 1, darken(b.crust, Math.min(1.12, tk * 1.1))); }
+  const top = y - th;
+  const dots = (pts, col, ww = 2) => pts.forEach(([dx, dy]) => SP(cx + dx, top + dy, ww, 1, col));
+  if (b.style === 'seed') dots([[-18, 1], [-9, 2], [0, 1], [8, 2], [16, 1], [-14, 3], [4, 3], [13, 1]], '#fbefd0');
+  if (b.style === 'flour') dots([[-24, 2], [-12, 1], [2, 2], [14, 1], [24, 2], [-4, 0]], '#fbf6ea', 3);
+  if (b.style === 'grain') dots([[-20, 2], [-10, 1], [-2, 3], [6, 1], [15, 2], [22, 3]], '#d8b98e', 1);
+  if (b.style === 'herb') { dots([[-20, 2], [-6, 1], [8, 2], [20, 1]], '#4f9a46', 1); dots([[-14, 1], [2, 2], [14, 2]], '#f7c93b'); }
+  if (b.style === 'baget') for (let x = cx - w / 2 + 8; x < cx + w / 2 - 8; x += 12) { SP(x, top + 1, 5, 1, darken(b.crust, .7)); SP(x + 4, top, 3, 1, b.inner); }
+  if (sw.toasted) for (let x = cx - w / 2 + 6; x < cx + w / 2 - 4; x += 8) SP(x, top + 1, 2, Math.max(1, th - 2), 'rgba(70,30,10,.5)');
+  return top;
+}
+function layer(SP, f, cx, y, w, toasted, idx) {
+  const it = ING[f], c1 = it.c1, c2 = it.c2, L = cx - w / 2, Rr = cx + w / 2, off = (idx * 3) % 5;
+  switch (it.shape) {
+    case 'rounds': for (let x = L + off - 2; x < Rr - 7; x += 9) { SP(x, y - 3, 9, 3, c1); SP(x + 1, y - 3, 7, 1, darken(c1, 1.1)); SP(x + 2, y - 2, 1, 1, c2); SP(x + 5, y - 2, 1, 1, c2); } return 3;
+    case 'fold': for (let x = L - 1 + off; x < Rr - 6; x += 7) { SP(x, y - 3, 8, 3, c1); SP(x, y - 3, 8, 1, c2); SP(x + 7, y - 2, 1, 2, darken(c1, .85)); } return 3;
+    case 'strips': for (let x = L + 1 + off; x < Rr - 8; x += 10) { SP(x, y - 4, 9, 4, c1); SP(x + 2, y - 4, 1, 4, c2); SP(x + 6, y - 4, 1, 4, c2); } return 4;
+    case 'egg': for (let x = L + 2 + off; x < Rr - 8; x += 11) { SP(x, y - 4, 9, 4, c1); SP(x + 3, y - 3, 3, 2, c2); } return 4;
+    case 'sheet': SP(L - 1, y - 2, w + 2, 2, c1); SP(L - 1, y - 2, w + 2, 1, c2);
+      if (toasted && it.tags.includes('eriyen')) [L + 3, cx - 4, Rr - 6].forEach(x => SP(x, y, 2, 2, c1)); return 2;
+    case 'chunks': for (let x = L + 1 + off; x < Rr - 4; x += 6) { const hh = 2 + ((x | 0) % 2); SP(x, y - hh, 5, hh, c1); SP(x, y - hh, 5, 1, c2); } return 3;
+    case 'balls': for (let x = L + 2 + off; x < Rr - 5; x += 7) { SP(x, y - 4, 6, 4, c1); SP(x + 1, y - 5, 4, 1, c1); SP(x + 1, y - 4, 2, 1, c2); } return 5;
+    case 'dots': for (let i = 0; i < w / 2; i++) SP(L + (i * 7) % w, y - 1 - (i % 2), 2, 1, i % 3 ? c1 : c2); return 2;
+    case 'leaf': SP(L - 3, y - 2, w + 6, 2, c1); for (let x = L - 3; x < Rr + 3; x += 4) SP(x, y - 3, 2, 1, c2); SP(L - 3, y, 2, 1, c1); SP(Rr + 1, y, 2, 1, c1); return 3;
+    case 'rings': for (let x = L + off; x < Rr - 6; x += 8) { SP(x, y - 3, 7, 3, c1); SP(x + 2, y - 2, 3, 1, c2); } return 3;
+    case 'drizzle': for (let x = L; x < Rr; x += 2) SP(x, y - 1 - ((x - L) % 6 < 3 ? 1 : 0), 2, 1, c1); return 1.5;
+    case 'spread': SP(L, y - 2, w, 2, c1); SP(L, y - 2, w, 1, c2); SP(L, y, 1, 3, c1); SP(Rr - 1, y, 1, 2, c1); return 2;
+  }
+  return 2;
+}
+
+window.Art = {
+  setCtx: ctx => { g = ctx; }, P, txt, W, H, darken, lerpC, nightK,
+  drawPerson, drawCat, drawBackground, drawShop, drawCounterFront, drawGround, drawTablesBack, drawTablesFront,
+  drawWeather, drawNight, bubble, icon, drawStack,
+};
+})();
+
+</script>
+<script>
+/* Umut Sandviç Evi — kayıt sistemi (çok oyunculu kayıt yuvaları)
+ * Her oyuncunun (arkadaşın) kendi kaydı vardır; aynı cihazda birden fazla kişi de oynayabilir.
+ * 1) Claude artifact'i olarak açıldığında: Claude hesabına bağlı bulut kaydı (db, kişiye özel alan).
+ * 2) Başka yerde (GitHub Pages, yerel dosya): tarayıcının localStorage'ı (+ kalıcı depolama isteği).
+ * 3) Yedek kodu: ⚙ menüsünden kopyala, başka cihazda yapıştır. */
+'use strict';
+(() => {
+const PREFIX = 'usev1:p:';            // yerel oyuncu kayıtları
+const LEGACY = 'umut-sandvic-evi-save-v1';
+const slug = s => (s || 'oyuncu').toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c')
+  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'oyuncu';
+
+const Save = {
+  mode: 'local', db: null, uid: null, ready: null, player: null, playerName: null,
+
+  init() {
+    this.ready = (async () => {
+      try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) {}
+      try {
+        if (window.claude && typeof window.claude.use === 'function') {
+          const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+          if (db && user) { const id = await user.id(); if (id) { this.db = db; this.uid = id; this.mode = 'cloud'; } }
+        }
+      } catch (e) {}
+      // eski tek kayıt → "Oyuncu 1"
+      try { const old = localStorage.getItem(LEGACY);
+        if (old && !localStorage.getItem(PREFIX + 'oyuncu-1')) { const s = JSON.parse(old); s.playerName = s.playerName || 'Oyuncu 1'; localStorage.setItem(PREFIX + 'oyuncu-1', JSON.stringify(s)); }
+        if (old) localStorage.removeItem(LEGACY);
+      } catch (e) {}
+      return this.mode;
+    })();
+    return this.ready;
+  },
+
+  idFor(name) { return slug(name); },
+  setPlayer(name) { this.playerName = name.trim().slice(0, 24) || 'Oyuncu'; this.player = slug(this.playerName); },
+  ref(pid) { return this.db.doc('data/users/' + this.uid + '/p-' + (pid || this.player)); },
+
+  async listPlayers() {
+    await this.ready;
+    const map = {};
+    try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i);
+      if (k && k.startsWith(PREFIX)) { const s = JSON.parse(localStorage.getItem(k)); const id = k.slice(PREFIX.length);
+        map[id] = { id, name: s.playerName || id, day: s.day, money: s.money, savedAt: s.savedAt || 0, state: s }; } } } catch (e) {}
+    if (this.mode === 'cloud') {
+      try { const snap = await this.db.collection('data/users/' + this.uid).get();
+        snap.docs.forEach(d => { if (!d.id.startsWith('p-') || !d.exists) return; const s = d.data().state; if (!s) return; const id = d.id.slice(2);
+          if (!map[id] || (s.savedAt || 0) > map[id].savedAt) map[id] = { id, name: s.playerName || id, day: s.day, money: s.money, savedAt: s.savedAt || 0, state: JSON.parse(JSON.stringify(s)) }; });
+      } catch (e) {}
+    }
+    return Object.values(map).sort((a, b) => b.savedAt - a.savedAt);
+  },
+
+  _busy: false, _pending: null,
+  async save(state) {
+    if (!this.player) return 'none';
+    state.savedAt = Date.now(); state.playerName = this.playerName;
+    try { localStorage.setItem(PREFIX + this.player, JSON.stringify(state)); } catch (e) {}
+    if (this.mode !== 'cloud') return 'local';
+    if (this._busy) { this._pending = state; return 'queued'; }
+    this._busy = true;
+    try { await this.ref().set({ state, v: 2 }); } catch (e) { this._busy = false; return 'local'; }
+    this._busy = false;
+    if (this._pending) { const p = this._pending; this._pending = null; return this.save(p); }
+    return 'cloud';
+  },
+
+  async wipe() {
+    if (!this.player) return;
+    try { localStorage.removeItem(PREFIX + this.player); } catch (e) {}
+    if (this.mode === 'cloud') { try { await this.ref().delete(); } catch (e) {} }
+  },
+
+  exportCode(state) { return btoa(unescape(encodeURIComponent(JSON.stringify(state)))); },
+  importCode(code) { try { const s = JSON.parse(decodeURIComponent(escape(atob(code.trim())))); return s && s.day ? s : null; } catch (e) { return null; } },
+};
+window.Save = Save;
+})();
+
+</script>
+<script>
+/* Umut Sandviç Evi — oyun döngüsü, müşteriler, tezgâh, dükkân, defter, kayıt */
+'use strict';
+(() => {
+const { CATS, ING, H, MOODS, CHARS, RECIPES, WEATHER, EQUIP, DECOR } = window.GameData;
+const A = window.Art, Save = window.Save;
+const $ = id => document.getElementById(id);
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+function wpick(entries) { // [[val, w], ...]
+  const tot = entries.reduce((s, e) => s + e[1], 0); let r = Math.random() * tot;
+  for (const [v, w] of entries) { if ((r -= w) <= 0) return v; } return entries[entries.length - 1][0];
+}
+const short = name => name.split(' ').slice(-2).join(' ');
+
+// ================= SABİTLER =================
+const W = 320, H2 = 180, MIN_PER_SEC = 4, OPEN = 480, CLOSE = 1200, LAST_SPAWN = 1160;
+const LANE = 142, SLOT_Y = 124, SLOT_X = [146, 170, 194];
+
+// ================= KALICI DURUM (kaydedilen) =================
+function newProfile() {
+  return { v: 1, day: 1, money: 0, rep: 3,
+    unlocked: Object.keys(ING).filter(k => ING[k].cost === 0),
+    equip: [], decor: [], book: {}, guide: {}, sigs: [],
+    stats: { served: 0, stars3: 0, pets: 0, earned: 0 }, savedAt: 0 };
+}
+let P = newProfile();
+const unl = () => new Set(P.unlocked);
+
+// ================= GÜNLÜK DURUM =================
+const S = { running: false, minutes: OPEN, speed: 1, closing: false, weather: 'gunesli',
+  customers: [], nextSpawn: OPEN + 6, lastChar: null, criticCame: false, uid: 0, kitchen: false,
+  sw: { bread: null, fills: [], toasted: false, toasting: 0 }, particles: [], birds: [{ x: 40, y: 9, v: 9 }, { x: 200, y: 5, v: 6 }, { x: 120, y: 14, v: 7 }],
+  tables: [], seats: [], day: { money: 0, served: 0, stars: 0, lost: 0, pets: 0, learned: 0, best: null, creations: [] },
+  catTab: 'ekmek', ended: false };
+const cat = { x: 110, y: 150, dir: 1, state: 'walk', floor: 'ground', tx: 120, ty: 150, t: 2, frame: 0, ft: 0, jump: null, toBed: false };
+
+const cv = $('scene'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false; A.setCtx(g);
+
+// ================= SES =================
+let AC = null;
+function beep(f, d = .08, type = 'square', v = .05, f2 = null) { if (!AC) return; try {
+  const o = AC.createOscillator(), gn = AC.createGain(); o.type = type; o.frequency.value = f;
+  if (f2) o.frequency.linearRampToValueAtTime(f2, AC.currentTime + d);
+  gn.gain.value = v; gn.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + d);
+  o.connect(gn).connect(AC.destination); o.start(); o.stop(AC.currentTime + d); } catch (e) {} }
+const sfx = { click: () => beep(660, .05), coin: () => { beep(988, .08); setTimeout(() => beep(1319, .15), 80); },
+  bad: () => beep(220, .25, 'sawtooth', .04, 140), meow: () => beep(820, .3, 'triangle', .07, 480),
+  bell: () => { beep(1568, .12, 'sine', .06); setTimeout(() => beep(1175, .2, 'sine', .05), 110); },
+  page: () => beep(520, .06, 'triangle', .05, 700), buy: () => { beep(784, .07); setTimeout(() => beep(1046, .07), 70); setTimeout(() => beep(1568, .15), 140); } };
+function initAudio() { if (!AC) try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+
+let toastT = null;
+function toast(msg, ms = 2000) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms); }
+function particle(x, y, text, color = '#ffd35c', life = 1.6) { S.particles.push({ x, y, text, color, t: 0, life }); }
+const has = (k, set) => P[set].includes(k);
+
+// ================= SANDVİÇ HESAPLARI =================
+function sandwichSummary() {
+  const sw = S.sw; const s = { bread: sw.bread, fills: sw.fills.slice(), toasted: sw.toasted };
+  s.price = (sw.bread ? ING[sw.bread].price : 0) + sw.fills.reduce((t, f) => t + ING[f].price, 0) + (sw.toasted ? 5 : 0) + 15;
+  return s;
+}
+const maxFills = () => has('tezgah', 'equip') ? 9 : 6;
+const toastTime = () => has('turbo', 'equip') ? .8 : 1.6;
+
+// ================= MÜŞTERİ SEÇİMİ =================
+function availableRecipes() {
+  const u = unl();
+  const base = Object.entries(RECIPES).filter(([, r]) => (!r.bread || u.has(r.bread)) && r.items.every(i => u.has(i))).map(([id, r]) => ({ id, ...r }));
+  return base;
+}
+function charWeights() {
+  const present = new Set(S.customers.map(c => c.cid));
+  const wx = WEATHER[S.weather];
+  return Object.keys(CHARS).filter(k => !CHARS[k].critic && k !== S.lastChar && !present.has(k)).map(k => {
+    let w = 1;
+    P.decor.forEach(d => { if (DECOR[d].chars && DECOR[d].chars[k]) w *= DECOR[d].chars[k]; });
+    if (wx.charBoost && wx.charBoost[k]) w *= wx.charBoost[k];
+    return [k, w];
+  });
+}
+function moodFor(ch) {
+  const wx = WEATHER[S.weather];
+  const ok = ch.moods.filter(m => { const M = MOODS[m];
+    if (M.before && S.minutes > M.before) return false;
+    if (M.after && S.minutes < M.after) return false;
+    if (M.onlyWeather && !M.onlyWeather.includes(S.weather)) return false;
+    if (M.notWeather && M.notWeather.includes(S.weather)) return false;
+    if (M.kidOnly && !ch.kid) return false;
+    return true; });
+  // hava ve dekor gerektirmeyen bazı genel durumlar da gelebilir
+  ['yagmur', 'bunalmis'].forEach(m => { const M = MOODS[m]; if (M.onlyWeather.includes(S.weather) && !ok.includes(m) && !ch.kid) ok.push(m); });
+  if (!ok.length) return 'ac';
+  return wpick(ok.map(m => { let w = 1;
+    if (wx.boost && wx.boost[m]) w *= wx.boost[m];
+    P.decor.forEach(d => { if (DECOR[d].moods && DECOR[d].moods[m]) w *= DECOR[d].moods[m]; });
+    return [m, w]; }));
+}
+function spawn() {
+  let cid;
+  if (!S.criticCame && S.minutes > 660 && Math.random() < .12 + P.rep * .03) { cid = 'gizemli'; S.criticCame = true; }
+  else { const ws = charWeights(); if (!ws.length) return; cid = wpick(ws); }
+  S.lastChar = cid;
+  const ch = CHARS[cid];
+  const b = P.book[cid] || (P.book[cid] = { visits: 0, likes: [], dislikes: [] });
+  b.visits++;
+  const order = { kind: 'mood', mood: null, recipe: null };
+  const recs = availableRecipes();
+  const pMenu = (has('pano', 'equip') ? .38 : .25);
+  if (!ch.critic && recs.length && Math.random() < pMenu) {
+    order.kind = 'menu';
+    if (P.sigs.length && Math.random() < .4) { order.recipe = pick(P.sigs); order.sig = true; }
+    else {
+      let pool = recs; if (ch.veg) pool = pool.filter(r => !r.items.some(i => ING[i].tags.includes('et') || ING[i].tags.includes('balik')));
+      if (ch.kid) pool = pool.filter(r => !r.items.some(i => ch.dislikes.includes(i)));
+      if (!pool.length) order.kind = 'mood'; else order.recipe = pick(pool);
+    }
+  }
+  let hint = '';
+  const greet = ch.greet && Math.random() < .5 ? pick(ch.greet) + ' ' : '';
+  if (order.kind === 'menu') {
+    const nm = order.recipe.name;
+    hint = greet + (order.sig ? pick([`Herkes sizin “${nm}”i konuşuyor, ondan bir tane!`, `Arkadaşım “${nm}” diye bir şey anlattı, bayılmış. Ondan alayım!`])
+      : pick([`Bir “${nm}” lütfen!`, `Menüdeki “${nm}”ten bir tane alabilir miyim?`, `“${nm}” var mı? Ondan alayım.`]));
+  } else {
+    order.mood = moodFor(ch);
+    hint = greet + pick(MOODS[order.mood].lines);
+    if (b.visits === 1 && ch.quirk && Math.random() < .35) hint += ' ' + ch.quirk;
+    else if (b.visits > 2 && Math.random() < .3) hint += ' ' + pick(['Beni artık tanıyorsun 😉', 'Her zamanki özeni bekliyorum!', 'Geçen sefer güzeldi bu arada.']);
+  }
+  const moodPat = order.kind === 'mood' ? MOODS[order.mood].pat : 1;
+  const pat = ch.base * moodPat * (has('cay', 'equip') ? 1.3 : 1) * (has('pikap', 'decor') ? 1.1 : 1);
+  S.customers.push({ id: ++S.uid, cid, ch, order, look: ch.look, x: 332, y: LANE, state: 'queue', arrived: false,
+    hint, patience: pat, maxP: pat, frame: 0, wt: 0, moving: false, path: null, bubble: null, eat: 0 });
+}
+
+// ================= DEĞERLENDİRME =================
+function evaluate(c, s) {
+  const ch = c.ch, o = c.order;
+  const inS = i => s.fills.includes(i) || s.bread === i;
+  if (!s.fills.length) return { stars: 0, line: 'Bu… sadece ekmek mi?', liked: [], disliked: [], pts: 0 };
+  const liked = ch.likes.filter(inS), disliked = ch.dislikes.filter(inS);
+  if (o.kind === 'menu') {
+    const r = o.recipe, req = r.items;
+    const missing = req.filter(i => !s.fills.includes(i));
+    const extras = s.fills.filter(i => !req.includes(i));
+    const toastBad = !!r.toast !== !!s.toasted, breadBad = r.bread && r.bread !== s.bread;
+    let stars = 3 - missing.length - (toastBad ? 1 : 0) - (breadBad ? 1 : 0) - (extras.length >= 2 ? 1 : 0) - (disliked.length ? 1 : 0);
+    stars = Math.max(0, Math.min(3, stars));
+    let line;
+    if (stars === 3) line = pick(['Tam menüdeki gibi, harika!', 'İşte bu! Aynen bekledim.', 'Eline sağlık usta!']);
+    else if (missing.length) line = `${ING[missing[0]].name} eksik galiba…`;
+    else if (breadBad) line = `Bu ${ING[r.bread].name.toLowerCase()} ile yapılmıyor muydu?`;
+    else if (toastBad) line = r.toast ? 'Bunun sıcak olması gerekiyordu.' : 'Bunu neden tostladın ki?';
+    else if (disliked.length) line = `${ING[disliked[0]].name}?! Ben onu sevmem ki…`;
+    else line = 'Biraz fazla şey koymuşsun ama olsun.';
+    return { stars, line, liked: [], disliked, pts: stars >= 2 ? 2 : 0, menu: true };
+  }
+  const m = MOODS[o.mood], pts = m.check(s);
+  let stars = pts + (liked.length ? 1 : 0);
+  if (disliked.length) stars = Math.max(0, stars - 2);
+  stars = Math.min(3, stars);
+  let line;
+  if (disliked.length) line = `${ING[disliked[0]].name}?! ${pick(['Ben onu sevmem ki…', 'Iyy, hiç sevmem!', 'Keşke sorsaydın…'])}`;
+  else { line = m.react[pts]; if (liked.length) line += ` Hele ${ING[liked[0]].name.toLowerCase()}, bayılırım!`; else if (pts === 2) line += ' En sevdiğim bir şey de olsa tam olurdu.'; }
+  if (ch.critic && stars === 3) line = 'Aslında ben yemek eleştirmeniyim… Bu dükkân bir yıldızı hak ediyor! ⭐';
+  return { stars, line, liked, disliked, pts };
+}
+
+function serve() {
+  if (!S.running) return;
+  const c = queueList()[0];
+  if (!c || !c.arrived) { toast(c ? 'Müşteri daha tezgâha gelmedi…' : 'Bekleyen müşteri yok.'); return; }
+  if (!S.sw.bread || S.sw.toasting > 0) return;
+  const s = sandwichSummary(), r = evaluate(c, s);
+  let price = s.price;
+  if (r.menu) price = Math.round((c.order.recipe.price || s.price) * (has('pano', 'equip') ? 1.15 : 1));
+  const moodTip = c.order.kind === 'mood' ? MOODS[c.order.mood].tip : 1;
+  let tip = Math.round((r.stars === 3 ? 12 : r.stars === 2 ? 4 : 0) * moodTip * (has('karagoz', 'decor') ? 1.05 : 1));
+  if (c.ch.critic && r.stars === 3) tip += 40;
+  const earned = r.stars > 0 ? price + tip : 0;
+  P.money += earned; P.stats.earned += earned; S.day.money += earned; S.day.served++; S.day.stars += r.stars; P.stats.served++;
+  if (r.stars === 3) P.stats.stars3++;
+  P.rep = Math.max(1, Math.min(5, P.rep + (r.stars - 1.5) * .08 + (c.ch.critic && r.stars === 3 ? .5 : 0) - (c.ch.critic && r.stars < 2 ? .3 : 0)));
+  if (!S.day.best || r.stars > S.day.best.stars) S.day.best = { stars: r.stars, name: c.ch.name, line: r.line };
+  // defter
+  const b = P.book[c.cid]; const learned = [];
+  r.liked.forEach(i => { if (!b.likes.includes(i)) { b.likes.push(i); learned.push('❤ ' + ING[i].name); } });
+  r.disliked.forEach(i => { if (!b.dislikes.includes(i)) { b.dislikes.push(i); learned.push('✖ ' + ING[i].name); } });
+  if (learned.length) { S.day.learned += learned.length; setTimeout(() => toast(`📒 Deftere yazıldı: ${short(c.ch.name)} → ${learned.join(', ')}`, 2600), 900); }
+  // ruh hâli rehberi
+  if (c.order.kind === 'mood' && r.pts === 2 && !P.guide[c.order.mood]) {
+    P.guide[c.order.mood] = true; const M = MOODS[c.order.mood];
+    setTimeout(() => toast(`📘 Rehbere eklendi: ${M.emo} ${M.label} → ${M.guide}`, 3200), learned.length ? 3400 : 900);
+  }
+  // imza tarif adayı
+  if (c.order.kind === 'mood' && r.stars === 3 && s.fills.length >= 3 && S.day.creations.length < 5)
+    S.day.creations.push({ bread: s.bread, items: s.fills.slice(), toast: s.toasted, by: c.ch.name, mood: c.order.mood, price: s.price });
+  c.bubble = { text: ['😠', '😐', '🙂', '😋'][r.stars], t: 2.4 };
+  if (earned) { particle(c.x, c.y - 26, '+₺' + earned); sfx.coin(); } else sfx.bad();
+  if (r.stars === 3) setTimeout(() => particle(c.x + 8, c.y - 22, '❤', '#ff6b81'), 250);
+  $('reaction').innerHTML = `<b>${'★'.repeat(r.stars)}${'☆'.repeat(3 - r.stars)}</b> ${short(c.ch.name)}: “${r.line}”<br><span style="color:#3f8f6a">${earned ? `+₺${price}${tip ? ` (+₺${tip} bahşiş)` : ''}` : 'Ödeme yok…'}</span>`;
+  const free = S.seats.filter(s2 => !s2.occ);
+  if (free.length && r.stars > 0) { const st = pick(free); st.occ = c; c.seat = st; c.state = 'toSeat'; c.path = [{ x: c.x, y: LANE }, { x: st.x, y: LANE }, { x: st.x, y: st.y }];
+    if (has('masa', 'equip')) { P.money += 4; S.day.money += 4; } }
+  else leave(c, null);
+  S.sw = { bread: null, fills: [], toasted: false, toasting: 0 }; refreshBoard();
+  closeKitchen();
+}
+
+// ================= HAREKET =================
+function queueList() { return S.customers.filter(c => c.state === 'queue').sort((a, b) => a.id - b.id); }
+function moveToward(c, tx, ty, step) {
+  const dx = tx - c.x, dy = ty - c.y, d = Math.hypot(dx, dy);
+  if (d <= step || d < .01) { c.x = tx; c.y = ty; c.moving = false; return true; }
+  c.x += dx / d * step; c.y += dy / d * step; c.moving = true; c.wt += step; c.frame = Math.floor(c.wt / 2.5) % 4; return false;
+}
+function leave(c, emoji) { c.state = 'leave'; c.bubble = emoji ? { text: emoji, t: 2 } : null; c.path = [{ x: c.x, y: LANE }, { x: -20, y: LANE }]; }
+
+// ================= KEDİ =================
+const BED = { x: 96, y: 126 };
+function catThink() {
+  const r = Math.random();
+  if (cat.floor === 'ground') {
+    if (has('kedi', 'decor') && r < .3) { cat.state = 'walk'; cat.tx = BED.x; cat.ty = BED.y; cat.toBed = true; return; }
+    if (r < .45) { cat.jump = { fx: cat.x, fy: cat.y, tx: Math.max(84, Math.min(236, cat.x)), ty: 92, t: 0, floor: 'counter' }; return; }
+    if (r < .6) { cat.state = Math.random() < .5 ? 'sit' : 'sleep'; cat.t = rnd(3, 8); return; }
+    cat.state = 'walk'; cat.tx = rnd(20, 300); cat.ty = rnd(128, 166); cat.toBed = false;
+  } else {
+    if (r < .3) { cat.jump = { fx: cat.x, fy: cat.y, tx: cat.x, ty: rnd(125, 140), t: 0, floor: 'ground' }; return; }
+    if (r < .7) { cat.state = Math.random() < .4 ? 'sleep' : 'sit'; cat.t = rnd(3, 9); return; }
+    cat.state = 'walk'; cat.tx = rnd(84, 236); cat.ty = 92;
+  }
+}
+function updateCat(dt) {
+  if (cat.jump) { const j = cat.jump; j.t += dt * 2.2; const k = Math.min(1, j.t);
+    cat.x = j.fx + (j.tx - j.fx) * k; cat.y = j.fy + (j.ty - j.fy) * k - Math.sin(k * Math.PI) * 14;
+    if (k >= 1) { cat.floor = j.floor; cat.jump = null; cat.state = 'sit'; cat.t = rnd(1, 3); } return; }
+  if (cat.state === 'walk') { const dx = cat.tx - cat.x, dy = cat.ty - cat.y, d = Math.hypot(dx, dy), st = 14 * dt;
+    if (Math.abs(dx) > .2) cat.dir = dx > 0 ? 1 : -1;
+    if (d <= st) { cat.x = cat.tx; cat.y = cat.ty; if (cat.toBed) { cat.toBed = false; cat.state = 'sleep'; cat.t = rnd(8, 16); } else catThink(); }
+    else { cat.x += dx / d * st; cat.y += dy / d * st; cat.ft += dt; cat.frame = Math.floor(cat.ft * 6) % 2; } }
+  else { cat.t -= dt; if (cat.t <= 0) catThink(); }
+}
+
+// ================= GÜNCELLEME =================
+function update(dt) {
+  S.birds.forEach(b => { b.x += b.v * dt; if (b.x > 330) { b.x = -10; b.y = rnd(3, 16); } });
+  updateCat(dt);
+  S.particles.forEach(p => p.t += dt); S.particles = S.particles.filter(p => p.t < p.life);
+  S.customers.forEach(c => { if (c.bubble) c.bubble.t -= dt; });
+  if (S.sw.toasting > 0) { S.sw.toasting -= dt; if (S.sw.toasting <= 0) { S.sw.toasting = 0; S.sw.toasted = true; sfx.bell(); refreshBoard(); } }
+  if (!S.running) return;
+  const sp = S.closing ? Math.max(S.speed, 4) : S.speed, gdt = dt * sp;
+  if (!S.closing) {
+    S.minutes = Math.min(CLOSE, S.minutes + gdt * MIN_PER_SEC);
+    const q = queueList();
+    if (S.minutes >= S.nextSpawn && S.minutes < LAST_SPAWN) {
+      if (q.length < 3) { spawn(); let gap = rnd(26, 46) * (1.24 - P.rep * .08); if (has('neon', 'decor') && S.minutes > 1020) gap *= .8; S.nextSpawn = S.minutes + gap; }
+      else S.nextSpawn = S.minutes + 8;
+    }
+    if (S.minutes >= CLOSE) { S.closing = true; queueList().forEach(c => leave(c, '👋')); toast('Kapanış saati! 🌙'); closeKitchen(); }
+  }
+  const step = 26 * gdt, q = queueList();
+  S.customers.forEach(c => {
+    if (c.state === 'queue') { const i = q.indexOf(c), tx = SLOT_X[Math.min(i, 2)];
+      if (c.y > LANE - 1 && Math.abs(c.x - tx) > .5) moveToward(c, tx, LANE, step);
+      else c.arrived = moveToward(c, tx, SLOT_Y, step) && i < 3;
+      if (c.arrived) { c.patience -= dt * (i === 0 ? 1 : .5);
+        if (c.patience <= 0) { leave(c, '😠'); S.day.lost++; P.rep = Math.max(1, P.rep - .12); sfx.bad();
+          $('reaction').innerHTML = `<b>☆☆☆</b> ${short(c.ch.name)}: “Çok bekledim, gidiyorum!”`; } }
+    } else if (c.state === 'toSeat' || c.state === 'leave') {
+      if (c.path && c.path.length) { if (moveToward(c, c.path[0].x, c.path[0].y, step * (c.state === 'leave' ? 1.1 : 1))) c.path.shift(); }
+      if (!c.path || !c.path.length) { if (c.state === 'toSeat') { c.state = 'eat'; c.eat = rnd(35, 55); c.moving = false; } else c.dead = true; }
+    } else if (c.state === 'eat') { c.eat -= gdt * MIN_PER_SEC;
+      if (Math.random() < dt * .15 && !(c.bubble && c.bubble.t > 0)) c.bubble = { text: pick(['😋', '☕', '🥪', '✨']), t: 1.5 };
+      if (c.eat <= 0) { c.seat.occ = null; c.state = 'leave'; c.path = [{ x: c.x, y: LANE }, { x: -20, y: LANE }]; } }
+  });
+  S.customers = S.customers.filter(c => !c.dead);
+  if (S.closing && !S.customers.length && !S.ended) endDay();
+}
+
+// ================= ÇİZİM =================
+function sceneState() { return { minutes: S.minutes, weather: S.weather, decor: new Set(P.decor), equip: new Set(P.equip), closing: S.closing, toasting: S.sw.toasting, birds: S.birds }; }
+function render() {
+  g.setTransform(4, 0, 0, 4, 0, 0);
+  const st = sceneState();
+  A.drawBackground(st); A.drawShop(st); A.drawCounterFront(st);
+  if (cat.floor === 'counter' && !cat.jump) A.drawCat(cat.x, cat.y, cat.dir, cat.state, cat.frame);
+  A.drawGround(st); A.drawTablesBack(S.seats);
+  S.customers.filter(c => c.state === 'eat').forEach(c => A.drawPerson(g, c.x, c.y, c.look, 0, true));
+  A.drawTablesFront(S.tables, S.seats);
+  const tea = has('cay', 'equip');
+  const list = S.customers.filter(c => c.state !== 'eat').map(c => ({ y: c.y, f: () => A.drawPerson(g, c.x, c.y, c.look, c.moving ? c.frame : 0, false, tea && c.state === 'queue' && c.arrived ? 'cay' : null) }));
+  if (cat.floor === 'ground' || cat.jump) list.push({ y: cat.y, f: () => A.drawCat(cat.x, cat.y, cat.dir, cat.jump ? 'walk' : cat.state, cat.frame) });
+  list.sort((a, b) => a.y - b.y).forEach(o => o.f());
+  A.drawWeather(st);
+  const q = queueList();
+  S.customers.forEach(c => {
+    const top = c.y - (c.look.kid ? 16 : 20) - 2 + (c.state === 'eat' ? 3 : 0);
+    if (c.bubble && c.bubble.t > 0) A.bubble(c.x, top, c.bubble.text);
+    else if (c.state === 'queue' && c.arrived) { const low = c.patience / c.maxP < .3;
+      A.bubble(c.x, top, low ? '😤' : (c.order.kind === 'menu' ? '📋' : MOODS[c.order.mood].emo), low ? '#ffd2c8' : (q[0] === c ? '#fff' : '#eee')); }
+  });
+  if (q[0] && q[0].arrived && !S.kitchen && S.running) { const b = Math.round(Math.sin(performance.now() / 180) * 1.5);
+    A.P(162, 59 + b, 23, 7, '#2a1d17'); A.P(163, 60 + b, 21, 5, '#d8432f');
+    A.P(170, 66 + b, 7, 1, '#2a1d17'); A.P(171, 66 + b, 5, 1, '#ffd35c'); A.P(172, 67 + b, 3, 1, '#ffd35c'); A.P(173, 68 + b, 1, 1, '#ffd35c');
+    A.txt('dokun', 173.5, 62.7 + b, 5, '#fff', 'px'); }
+  if (cat.state === 'sleep' && !cat.jump) { const zz = Math.floor(performance.now() / 600) % 3; A.txt('z'.repeat(zz + 1), cat.x + (cat.dir > 0 ? 6 : -6), cat.y - 10, 6, '#fff'); }
+  S.particles.forEach(p => { const a = 1 - p.t / p.life; g.globalAlpha = Math.max(0, a);
+    A.txt(p.text, p.x + .4, p.y - p.t * 10 + .4, 7, '#2a1d17', 'px'); A.txt(p.text, p.x, p.y - p.t * 10, 7, p.color, 'px'); g.globalAlpha = 1; });
+  if (S.sw.toasting > 0) { const t = performance.now() / 200; for (let i = 0; i < 3; i++) A.P(167 + i * 5 + Math.round(Math.sin(t + i)), 70 - ((t * 3 + i * 4) % 8), 1, 2, 'rgba(255,255,255,.8)'); }
+  A.drawNight(st);
+}
+
+// ================= TEZGÂH (UI) =================
+const iconCache = {};
+const ic = id => { const c = A.icon(id); return c; };
+function buildCatTabs() {
+  const el = $('catTabs'); el.innerHTML = '';
+  [...CATS, { id: 'menu', name: 'Menü', emo: '📖' }].forEach(c => {
+    const b = document.createElement('button'); b.dataset.cat = c.id;
+    b.innerHTML = `${c.emo} ${c.name}`;
+    const n = c.id !== 'menu' && c.id !== 'ekmek' ? S.sw.fills.filter(f => ING[f].cat === c.id).length : 0;
+    if (n) b.innerHTML += `<span class="dot">${n}</span>`;
+    if (c.id === 'ekmek' && S.sw.bread) b.innerHTML += '<span class="dot">✓</span>';
+    b.classList.toggle('on', S.catTab === c.id);
+    b.onclick = () => { S.catTab = c.id; sfx.click(); refreshBoard(); };
+    el.append(b);
+  });
+}
+function buildCatPanel() {
+  const el = $('catPanel'); el.innerHTML = '';
+  const u = unl(), sw = S.sw, busy = sw.toasting > 0;
+  if (S.catTab === 'menu') {
+    const box = document.createElement('div'); box.className = 'recipes';
+    const fmt = r => `${r.bread ? ING[r.bread].name + ' · ' : ''}${r.items.map(i => ING[i].name).join(', ')}${r.toast ? ' · 🔥 tost' : ''}`;
+    P.sigs.forEach(r => { const d = document.createElement('div'); d.className = 'rec';
+      d.innerHTML = `<b class="sig">✨ ${r.name}</b> <span style="float:right">₺${r.price}</span><br>${fmt(r)}`; box.append(d); });
+    Object.values(RECIPES).forEach(r => { const ok = (!r.bread || u.has(r.bread)) && r.items.every(i => u.has(i));
+      const d = document.createElement('div'); d.className = 'rec' + (ok ? '' : ' lock');
+      d.innerHTML = `<b>${ok ? '' : '🔒 '}${r.name}</b> <span style="float:right">₺${r.price}</span><br>${fmt(r)}`; box.append(d); });
+    el.append(box); return;
+  }
+  const grid = document.createElement('div'); grid.className = 'grid';
+  Object.entries(ING).filter(([, it]) => it.cat === S.catTab).forEach(([id, it]) => {
+    const b = document.createElement('button'); b.className = 'ing'; const locked = !u.has(id);
+    if (locked) b.classList.add('lock');
+    b.append(ic(id));
+    const s = document.createElement('span'); s.textContent = it.name; b.append(s);
+    const pr = document.createElement('span'); pr.className = 'pr'; pr.textContent = locked ? `🔒 ₺${it.cost}` : `₺${it.price}`; b.append(pr);
+    if (S.catTab === 'ekmek') { b.classList.toggle('sel', sw.bread === id); b.disabled = locked || busy || sw.toasted; b.onclick = () => { sw.bread = id; sfx.click(); refreshBoard(); }; }
+    else { const n = sw.fills.filter(f => f === id).length; if (n) { const cn = document.createElement('span'); cn.className = 'cnt'; cn.textContent = '×' + n; b.append(cn); }
+      b.disabled = locked || busy || !sw.bread || sw.fills.length >= maxFills() || sw.toasted;
+      b.onclick = () => { if (!sw.bread) return; sw.fills.push(id); sfx.click(); refreshBoard(); }; }
+    if (locked) b.title = 'Gün sonunda dükkândan açabilirsin';
+    grid.append(b);
+  });
+  el.append(grid);
+  if (S.catTab !== 'ekmek' && !sw.bread) { const p = document.createElement('div'); p.style.cssText = 'font-size:17px;color:#7a5a40;margin-top:6px'; p.textContent = 'Önce Ekmek sekmesinden bir ekmek seç.'; el.append(p); }
+}
+function refreshBoard() {
+  const sw = S.sw, busy = sw.toasting > 0;
+  $('sandLabel').textContent = !sw.bread ? 'Önce bir ekmek seç.' : (sw.toasted ? '🔥 ' : '🥪 ') + ING[sw.bread].name + (sw.fills.length ? ' + ' + sw.fills.map(f => ING[f].name).join(', ') : ' (boş)');
+  $('sandPrice').textContent = sw.bread ? `₺${sandwichSummary().price} · ${sw.fills.length}/${maxFills()}` : '';
+  $('toastBtn').disabled = busy || !sw.bread || sw.toasted || !S.running;
+  $('undoBtn').disabled = busy || !sw.bread; $('clearBtn').disabled = busy || !sw.bread;
+  $('serveBtn').disabled = busy || !sw.bread || !S.running;
+  if (S.kitchen) { buildCatTabs(); buildCatPanel(); }
+}
+$('undoBtn').onclick = () => { const sw = S.sw; if (sw.toasted) sw.toasted = false; else if (sw.fills.length) sw.fills.pop(); else sw.bread = null; sfx.click(); refreshBoard(); };
+$('clearBtn').onclick = () => { S.sw = { bread: null, fills: [], toasted: false, toasting: 0 }; S.catTab = 'ekmek'; sfx.click(); refreshBoard(); };
+$('toastBtn').onclick = () => { if (!S.sw.bread) return; S.sw.toasting = toastTime(); beep(300, .3, 'sawtooth', .03, 260); refreshBoard(); };
+$('serveBtn').onclick = serve;
+
+function openKitchen() {
+  if (!S.running) return;
+  S.kitchen = true; $('kitchen').classList.remove('hidden'); $('backdrop').classList.remove('hidden');
+  if (!S.sw.bread) S.catTab = 'ekmek';
+  syncKitchenOrder(true); refreshBoard(); sfx.page();
+}
+function closeKitchen() { S.kitchen = false; $('kitchen').classList.add('hidden'); $('backdrop').classList.add('hidden'); }
+$('openK').onclick = openKitchen; $('closeK').onclick = closeKitchen; $('backdrop').onclick = closeKitchen;
+
+function bookLine(c) {
+  const b = P.book[c.cid];
+  if (c.ch.critic) return '🕶️ Kim olduğu belli değil… Elinden gelenin en iyisini yap.';
+  if (!b || (b.visits <= 1 && !b.likes.length && !b.dislikes.length)) return '📒 İlk kez geliyor, dikkatle dinle!';
+  const L = b.likes.map(i => ING[i].name), D = b.dislikes.map(i => ING[i].name);
+  let s = `📒 ${b.visits}. ziyaret · ❤ ${L.length ? L.join(', ') : '?'} · ✖ ${D.length ? D.join(', ') : '?'}`;
+  if (c.order.kind === 'mood' && P.guide[c.order.mood]) s += `\n📘 ${MOODS[c.order.mood].guide}`;
+  return s;
+}
+let kOrderId = null;
+function moodTag(c) { return c.order.kind === 'menu' ? (c.order.sig ? '✨ İmza tarif' : '📋 Menüden') : MOODS[c.order.mood].emo + ' ' + MOODS[c.order.mood].label; }
+function syncKitchenOrder(force) {
+  const c = queueList()[0], id = c && c.arrived ? c.id : null;
+  if (!force && id === kOrderId) return; kOrderId = id;
+  if (id) { $('kName').textContent = c.ch.name; $('kMood').textContent = moodTag(c); $('kMood').classList.remove('hidden');
+    $('kHint').textContent = '“' + c.hint + '”'; $('kBook').innerText = bookLine(c); drawPortrait($('kPortrait'), c.look); }
+  else { $('kName').textContent = 'Bekleyen müşteri yok'; $('kMood').classList.add('hidden'); $('kHint').textContent = 'Önceden hazırlık yapabilirsin.'; $('kBook').textContent = ''; drawPortrait($('kPortrait'), null); }
+}
+function drawPortrait(cnv, look, size = 96) {
+  const p = cnv.getContext('2d'); p.imageSmoothingEnabled = false; p.setTransform(1, 0, 0, 1, 0, 0);
+  p.fillStyle = '#efd9ad'; p.fillRect(0, 0, cnv.width, cnv.height); const k = cnv.width / 24; p.setTransform(k, 0, 0, k, 0, 0);
+  if (look) { A.drawPerson(p, 12, look.kid ? 22 : 23, look, 0, false); return; }
+  const R = (a, b, w, h, col) => { p.fillStyle = col; p.fillRect(a, b, w, h); };
+  R(7, 13, 10, 8, '#ec9a45'); R(9, 15, 5, 6, '#fff3e0'); R(7, 7, 9, 7, '#ec9a45'); R(7, 6, 2, 1, '#ec9a45'); R(14, 6, 2, 1, '#ec9a45');
+  R(9, 10, 1, 1, '#2a1d17'); R(13, 10, 1, 1, '#2a1d17'); R(11, 11, 1, 1, '#f08a9a'); R(17, 18, 3, 2, '#ec9a45'); R(19, 16, 1, 2, '#ec9a45');
+}
+
+// ================= ÜST BİLGİ =================
+let lastKey = null;
+function syncUI() {
+  $('sDay').textContent = P.day; $('sClock').textContent = fmtTime(S.minutes); $('sMoney').textContent = '₺' + P.money; $('sRep').textContent = P.rep.toFixed(1);
+  $('sWeather').textContent = WEATHER[S.weather].emo; $('sWeather').title = WEATHER[S.weather].name;
+  const q = queueList(), c = q[0], id = c && c.arrived ? c.id : null, key = id ?? (c ? 'coming' : 'none');
+  if (key !== lastKey) { lastKey = key;
+    if (id) { $('custName').textContent = c.ch.name; $('custMood').textContent = moodTag(c); $('custMood').classList.remove('hidden');
+      $('custHint').textContent = '“' + c.hint + '”'; drawPortrait($('portrait'), c.look); sfx.bell();
+      if (S.speed > 1) { setSpeed(1); toast('Müşteri geldi, hız 1x’e döndü'); } }
+    else { $('custMood').classList.add('hidden'); $('custName').textContent = c ? 'Biri geliyor…' : 'Henüz müşteri yok';
+      $('custHint').textContent = c ? 'Tezgâha yaklaşıyor.' : pick(['Dükkân sakin… Pamuk güneşleniyor.', 'Ulucami’den güvercinler havalandı.', 'Çaylar demlendi, sıradaki müşteriyi bekliyorsun.', 'Uludağ bugün pırıl pırıl görünüyor.', 'Komşu kestane şekercisi selam yolladı.']);
+      drawPortrait($('portrait'), null); }
+  }
+  $('openK').classList.toggle('pulse', !!id && !S.kitchen);
+  const setBar = el => { if (id) { const k = Math.max(0, c.patience / c.maxP); el.style.width = (k * 100) + '%'; el.style.background = k > .5 ? '#5bbf4a' : k > .25 ? '#f1c40f' : '#e74c3c'; } else el.style.width = '0%'; };
+  setBar($('patFill')); if (S.kitchen) { setBar($('kPat')); syncKitchenOrder(false); A.drawStack($('stack'), S.sw, 3); if (S.sw.toasting > 0) drawToastBar(); }
+  $('queueInfo').textContent = q.length > 1 ? `Sırada ${q.length - 1} kişi daha bekliyor` : '';
+  $('fastHint').style.display = (S.running && !S.closing && !q.length && S.speed < 4 && S.speed > 0) ? 'block' : 'none';
+}
+function drawToastBar() { const sg = $('stack').getContext('2d'); sg.setTransform(3, 0, 0, 3, 0, 0);
+  sg.fillStyle = '#2a1d17'; sg.fillRect(20, 3, 80, 5); sg.fillStyle = '#ff7a3d'; sg.fillRect(21, 4, 78 * (1 - S.sw.toasting / toastTime()), 3);
+  const t = performance.now() / 150; sg.fillStyle = 'rgba(255,255,255,.75)'; for (let i = 0; i < 5; i++) sg.fillRect(Math.round(40 + i * 10 + Math.sin(t + i) * 2), Math.round(14 - ((t * 2 + i * 3) % 8)), 1, 3); }
+function fmtTime(m) { m = Math.floor(m); return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+function setSpeed(v) { S.speed = v; document.querySelectorAll('[data-sp]').forEach(b => b.classList.toggle('on', +b.dataset.sp === v)); }
+document.querySelectorAll('[data-sp]').forEach(b => b.onclick = () => { setSpeed(+b.dataset.sp); sfx.click(); });
+
+// ================= GÜN AKIŞI =================
+function rollWeather() {
+  if (P.day === 1) return 'gunesli';
+  return wpick([['gunesli', 3], ['bulutlu', 2], ['yagmurlu', 2], ['karli', 1], ['sicak', 1.5]]);
+}
+function startDay() {
+  S.weather = P.nextWeather || rollWeather(); P.nextWeather = null;
+  S.minutes = OPEN; S.closing = false; S.ended = false; S.criticCame = false; S.nextSpawn = OPEN + 6; S.customers = []; S.lastChar = null;
+  S.day = { money: 0, served: 0, stars: 0, lost: 0, pets: 0, learned: 0, best: null, creations: [] };
+  S.tables = has('masa', 'equip') ? [40, 120, 200, 280] : [52, 160, 268];
+  S.seats = []; S.tables.forEach(t => S.seats.push({ x: t - 13, y: 163, occ: null, t }, { x: t + 13, y: 163, occ: null, t }));
+  S.sw = { bread: null, fills: [], toasted: false, toasting: 0 }; S.catTab = 'ekmek';
+  $('reaction').innerHTML = ''; lastKey = -1; S.running = true; refreshBoard(); sfx.bell();
+  toast(`${P.day}. gün · ${WEATHER[S.weather].emo} ${WEATHER[S.weather].name}`, 2400);
+}
+function endDay() {
+  S.ended = true; S.running = false; closeKitchen();
+  const d = S.day, avg = d.served ? (d.stars / d.served).toFixed(1) : '–';
+  if (has('saksi', 'decor')) P.rep = Math.min(5, P.rep + .05);
+  const dayNo = P.day; P.day += 1; P.nextWeather = rollWeather();
+  doSave();
+  $('endTitle').textContent = `${dayNo}. gün bitti 🌙`;
+  $('endBody').innerHTML = `<p>💰 Bugünkü kazanç: <b>₺${d.money}</b> · kasa: <b>₺${P.money}</b></p>
+    <p>🥪 Servis: <b>${d.served}</b> · ortalama ${avg} ★ · 😠 kızıp giden: ${d.lost}</p>
+    <p>📒 Bugün deftere ${d.learned} yeni bilgi yazıldı · 🐈 Pamuk ${d.pets} kez sevildi</p>
+    ${d.best ? `<p>🏆 Günün yorumu, ${d.best.name}: “${d.best.line}”</p>` : ''}
+    <p style="color:#7a5a40">Yarın: ${WEATHER[P.nextWeather].emo} ${WEATHER[P.nextWeather].name}</p>`;
+  const ce = $('endCreations'); ce.innerHTML = '';
+  if (d.creations.length && P.sigs.length < 8) {
+    ce.innerHTML = '<h4>✨ Bugünün 3 yıldızlı yaratımları: imza tarif yapmak ister misin?</h4>';
+    d.creations.slice(0, 3).forEach((cr, i) => {
+      const div = document.createElement('div'); div.className = 'creation';
+      const def = pick([`${short(cr.by).split(' ')[0]}’in Favorisi`, `${MOODS[cr.mood].label} Usulü`, `Ulucami ${['Klasiği', 'Rüyası', 'Esintisi'][i % 3]}`, `Uludağ ${['Zirvesi', 'Esintisi'][i % 2]}`]);
+      div.innerHTML = `<b>${ING[cr.bread].name}</b> · ${cr.items.map(x => ING[x].name).join(', ')}${cr.toast ? ' · 🔥' : ''}<br><small>${cr.by} için (${MOODS[cr.mood].emo} ${MOODS[cr.mood].label})</small><br>`;
+      const inp = document.createElement('input'); inp.value = def; inp.maxLength = 28;
+      const btn = document.createElement('button'); btn.textContent = '✨ İmza yap'; btn.style.marginLeft = '6px';
+      btn.onclick = () => { const name = inp.value.trim() || def; const price = Math.round(cr.price * 1.2 / 5) * 5;
+        P.sigs.push({ id: 'sig' + Date.now(), name, bread: cr.bread, items: cr.items, toast: cr.toast, price });
+        btn.disabled = true; inp.disabled = true; btn.textContent = '✓ Menüde!'; sfx.buy(); doSave(); };
+      div.append(inp, btn); ce.append(div);
+    });
+  }
+  $('endModal').classList.remove('hidden'); refreshBoard();
+}
+$('toShopBtn').onclick = () => { $('endModal').classList.add('hidden'); openShop(); };
+$('nextDayBtn').onclick = () => { $('shopModal').classList.add('hidden'); doSave(); startDay(); };
+
+// ================= DÜKKÂN =================
+let shopTab = 'malzeme';
+function openShop() { $('shopModal').classList.remove('hidden'); renderShop(); }
+function renderShop() {
+  $('shopMoney').textContent = `· 💰 ₺${P.money}`;
+  $('tomorrow').textContent = `Yarın: ${WEATHER[P.nextWeather || 'gunesli'].emo} ${WEATHER[P.nextWeather || 'gunesli'].name} · ${P.day}. gün`;
+  const tabs = $('shopTabs'); tabs.innerHTML = '';
+  [['malzeme', '🥬 Malzemeler'], ['ekipman', '🛠 Ekipman'], ['dekor', '🎨 Dekor']].forEach(([id, nm]) => {
+    const b = document.createElement('button'); b.textContent = nm; b.classList.toggle('on', shopTab === id); b.onclick = () => { shopTab = id; renderShop(); }; tabs.append(b); });
+  const panel = $('shopPanel'); panel.innerHTML = '';
+  const grid = document.createElement('div'); grid.className = 'shopGrid';
+  const item = (icoEl, title, desc, cost, owned, onBuy) => {
+    const d = document.createElement('div'); d.className = 'shopItem' + (owned ? ' owned' : '');
+    const ico = document.createElement('div'); ico.className = 'ico'; if (typeof icoEl === 'string') ico.textContent = icoEl; else ico.append(icoEl);
+    const t = document.createElement('div'); t.className = 't'; t.innerHTML = `<b>${title}</b>${desc}`;
+    const btn = document.createElement('button');
+    if (owned) { btn.textContent = '✓ Var'; btn.disabled = true; } else { btn.textContent = `₺${cost}`; btn.disabled = P.money < cost; btn.className = 'ok';
+      btn.onclick = () => { if (P.money < cost) return; P.money -= cost; onBuy(); sfx.buy(); toast(`${title} alındı!`); doSave(); renderShop(); }; }
+    d.append(ico, t, btn); grid.append(d);
+  };
+  if (shopTab === 'malzeme') {
+    CATS.forEach(c => { Object.entries(ING).filter(([, it]) => it.cat === c.id && it.cost > 0).forEach(([id, it]) => {
+      const used = Object.values(RECIPES).filter(r => r.items.includes(id) || r.bread === id).map(r => r.name);
+      item(A.icon(id), `${c.emo} ${it.name}`, used.length ? `Menüde: ${used.slice(0, 2).join(', ')}` : 'Yeni lezzet seçeneği', it.cost, P.unlocked.includes(id), () => P.unlocked.push(id)); }); });
+  } else if (shopTab === 'ekipman') {
+    Object.entries(EQUIP).forEach(([id, e]) => item(e.emo, e.name, e.desc, e.cost, P.equip.includes(id), () => P.equip.push(id)));
+  } else {
+    Object.entries(DECOR).forEach(([id, e]) => item(e.emo, e.name, e.desc, e.cost, P.decor.includes(id), () => P.decor.push(id)));
+  }
+  panel.append(grid);
+}
+
+// ================= DEFTER =================
+let bookTab = 'musteri';
+function openBook() { $('bookModal').classList.remove('hidden'); renderBook(); sfx.page(); }
+function renderBook() {
+  const tabs = $('bookTabs'); tabs.innerHTML = '';
+  [['musteri', '👥 Müşteriler'], ['rehber', '📘 Ruh hâli rehberi'], ['menu', '📖 Menü & imza tarifler']].forEach(([id, nm]) => {
+    const b = document.createElement('button'); b.textContent = nm; b.classList.toggle('on', bookTab === id); b.onclick = () => { bookTab = id; renderBook(); }; tabs.append(b); });
+  const panel = $('bookPanel'); panel.innerHTML = '';
+  if (bookTab === 'musteri') {
+    const grid = document.createElement('div'); grid.className = 'people';
+    Object.entries(CHARS).filter(([, c]) => !c.critic).forEach(([id, ch]) => {
+      const b = P.book[id], d = document.createElement('div'); d.className = 'person' + (b ? '' : ' unknown');
+      const cnv = document.createElement('canvas'); cnv.width = 48; cnv.height = 48; drawPortrait(cnv, b ? ch.look : { ...ch.look, skin: '#9a8a7a', hair: '#7a6a5a', shirt: '#8a7a6a', pants: '#6a5a4a' });
+      const t = document.createElement('div');
+      if (b) t.innerHTML = `<b>${ch.name}</b><br>${b.visits} ziyaret<br>❤ ${b.likes.length ? b.likes.map(i => ING[i].name).join(', ') : '?'}<br>✖ ${b.dislikes.length ? b.dislikes.map(i => ING[i].name).join(', ') : '?'}`;
+      else t.innerHTML = '<b>???</b><br>Henüz tanışmadınız.';
+      d.append(cnv, t); grid.append(d);
+    });
+    panel.append(grid);
+    const known = Object.keys(P.book).filter(k => !CHARS[k].critic).length;
+    const p = document.createElement('p'); p.textContent = `${known} / ${Object.keys(CHARS).length - 1} müşteri tanındı. Sevdikleri ve sevmedikleri, onlara servis ettikçe ortaya çıkar.`; panel.append(p);
+  } else if (bookTab === 'rehber') {
+    const grid = document.createElement('div'); grid.className = 'people';
+    Object.entries(MOODS).filter(([, m]) => !m.special).forEach(([id, m]) => {
+      const d = document.createElement('div'); d.className = 'person' + (P.guide[id] ? '' : ' unknown');
+      d.innerHTML = `<div style="font-size:26px;width:34px;text-align:center">${m.emo}</div><div><b>${m.label}</b><br>${P.guide[id] ? m.guide : '??? Bu ruh hâlini bir kez tam tuttur, ipucu açılsın.'}</div>`;
+      grid.append(d); });
+    panel.append(grid);
+  } else {
+    const box = document.createElement('div'); box.className = 'recipes'; box.style.maxHeight = 'none';
+    const u = unl(); const fmt = r => `${r.bread ? ING[r.bread].name + ' · ' : ''}${r.items.map(i => ING[i].name).join(', ')}${r.toast ? ' · 🔥 tost' : ''}`;
+    if (!P.sigs.length) { const p = document.createElement('p'); p.textContent = 'Henüz imza tarifin yok. Bir ruh hâlini 3 yıldızla tutturduğun en az 3 malzemeli sandviçleri gün sonunda imza tarife çevirebilirsin.'; panel.append(p); }
+    P.sigs.forEach(r => { const d = document.createElement('div'); d.className = 'rec'; d.innerHTML = `<b class="sig">✨ ${r.name}</b> <span style="float:right">₺${r.price}</span><br>${fmt(r)}`; box.append(d); });
+    Object.values(RECIPES).forEach(r => { const ok = (!r.bread || u.has(r.bread)) && r.items.every(i => u.has(i));
+      const d = document.createElement('div'); d.className = 'rec' + (ok ? '' : ' lock'); d.innerHTML = `<b>${ok ? '' : '🔒 '}${r.name}</b> <span style="float:right">₺${r.price}</span><br>${fmt(r)}`; box.append(d); });
+    panel.append(box);
+  }
+}
+$('bookBtn').onclick = openBook; $('bookClose').onclick = () => $('bookModal').classList.add('hidden');
+
+// ================= KAYIT =================
+async function doSave() {
+  const res = await Save.save(JSON.parse(JSON.stringify(P)));
+  $('saveBadge').textContent = res === 'cloud' || res === 'queued' ? '☁ kaydedildi' : '💾 bu cihaza kaydedildi';
+}
+function openSettings() {
+  $('setModal').classList.remove('hidden');
+  $('saveMode').textContent = Save.mode === 'cloud' ? `👤 ${Save.playerName} · ☁ Kayıt: Claude hesabın (bulut).` : `👤 ${Save.playerName} · 💾 Kayıt: bu cihazın tarayıcısı. Başka cihaza geçerken yedek kodunu kullan.`;
+  $('exportBox').value = Save.exportCode(P); $('resetBtn').dataset.sure = '';
+  $('resetBtn').textContent = '🗑 Sıfırdan başla';
+}
+$('setBtn').onclick = openSettings; $('setClose').onclick = () => $('setModal').classList.add('hidden');
+$('copyBtn').onclick = async () => { try { await navigator.clipboard.writeText($('exportBox').value); toast('Yedek kodu kopyalandı 📋'); } catch (e) { $('exportBox').select(); toast('Kod seçildi, kopyalayabilirsin.'); } };
+$('importBtn').onclick = () => { const s = Save.importCode($('importBox').value); if (!s) { toast('Kod geçersiz 😕'); return; }
+  P = Object.assign(newProfile(), s); doSave(); $('setModal').classList.add('hidden'); toast(`Yedek yüklendi: ${P.day}. gün`); S.running = false; startDay(); };
+$('resetBtn').onclick = async () => { const b = $('resetBtn'); if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = 'Emin misin? Tekrar bas'; return; }
+  await Save.wipe(); P = newProfile(); $('setModal').classList.add('hidden'); toast('Bu oyuncu sıfırdan başladı'); S.running = false; doSave(); startDay(); };
+
+// ================= GİRİŞ & KONTROLLER =================
+window.addEventListener('keydown', e => {
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+  if (e.key === '0') setSpeed(0); if (e.key === '1') setSpeed(1); if (e.key === '2') setSpeed(2); if (e.key === '3') setSpeed(4);
+  if (e.key === 'Enter' && S.kitchen) { e.preventDefault(); serve(); }
+  if (e.key === ' ') { e.preventDefault(); S.kitchen ? closeKitchen() : openKitchen(); }
+  if (e.key === 'Escape') closeKitchen();
+});
+cv.addEventListener('click', e => {
+  const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H2;
+  if (Math.abs(x - cat.x) < 11 && y > cat.y - 15 && y < cat.y + 3) {
+    S.day.pets++; P.stats.pets++; particle(cat.x, cat.y - 12, '❤', '#ff6b81', 1.4); sfx.meow();
+    if (has('kedi', 'decor') && S.day.pets <= 10 && S.running) { P.money += 1; S.day.money += 1; particle(cat.x + 6, cat.y - 8, '+₺1', '#ffd35c', 1.2); }
+    if (cat.state === 'sleep') { cat.state = 'sit'; cat.t = 3; }
+    toast(pick(['Miyav! 🐈', 'Pamuk mırlıyor…', 'Prrr ❤', 'Pamuk kafasını sürttü'])); return; }
+  const c = queueList()[0];
+  if ((x >= 70 && x <= 250 && y >= 48 && y <= 112) || (c && Math.abs(x - c.x) < 8 && y > c.y - 22 && y < c.y + 1)) openKitchen();
+});
+
+async function boot() {
+  Save.init();
+  const players = await Save.listPlayers();
+  $('startStatus').textContent = (Save.mode === 'cloud' ? '☁ Kayıtlar Claude hesabına yapılıyor.' : '💾 Kayıtlar bu cihazın tarayıcısında tutuluyor.') + (players.length ? ' Kaydını seç ya da yeni oyuncu ekle.' : ' Adını yaz ve başla!');
+  const list = $('playerList'); list.innerHTML = '';
+  const begin = (name, state) => { initAudio(); Save.setPlayer(name); P = state ? Object.assign(newProfile(), state) : newProfile();
+    $('sPlayer').textContent = Save.playerName; $('startModal').classList.add('hidden'); doSave(); startDay(); };
+  players.forEach(pl => { const d = document.createElement('button'); d.className = 'person'; d.style.cssText = 'text-align:left;cursor:pointer';
+    d.innerHTML = `<div style="font-size:26px">🧑‍🍳</div><div><b>${pl.name.replace(/[<>&]/g, '')}</b><br>${pl.day}. gün · ₺${pl.money}<br><small>${new Date(pl.savedAt).toLocaleDateString('tr-TR')}</small></div>`;
+    d.onclick = () => begin(pl.name, pl.state); list.append(d); });
+  const startNew = () => { const nm = $('newName').value.trim(); if (!nm) { toast('Önce adını yaz 🙂'); $('newName').focus(); return; }
+    const ex = players.find(p2 => p2.id === Save.idFor(nm)); if (ex) { toast(`“${ex.name}” zaten var, kaldığı yerden devam ediyor`); begin(ex.name, ex.state); return; }
+    begin(nm, null); };
+  $('newPlayerBtn').onclick = startNew; $('newName').onkeydown = e => { if (e.key === 'Enter') startNew(); };
+  $('saveBadge').textContent = Save.mode === 'cloud' ? '☁ bulut kaydı' : '💾 cihaz kaydı';
+}
+$('switchBtn').onclick = () => { doSave(); location.reload(); };
+
+// ================= DÖNGÜ =================
+S.tables = [52, 160, 268]; S.seats = []; S.tables.forEach(t => S.seats.push({ x: t - 13, y: 163, occ: null, t }, { x: t + 13, y: 163, occ: null, t }));
+drawPortrait($('portrait'), null);
+let last = performance.now();
+function loop(t) { const dt = Math.min(.05, (t - last) / 1000); last = t; update(dt); render(); syncUI(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+boot();
+window.__game = { S, get P() { return P; } };
+})();
+
+</script>
 </body>
 </html>
