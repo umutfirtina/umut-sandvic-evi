@@ -13,6 +13,7 @@
   <header>
     <h1>UMUT SANDVİÇ EVİ<small>Bursa · Ulucami Cd.</small></h1>
     <div class="stats">
+      <div>👤 <b id="sPlayer">—</b></div>
       <div>Gün <b id="sDay">1</b> <span id="sWeather" title="Hava">☀️</span></div>
       <div>🕗 <b id="sClock">08:00</b></div>
       <div>💰 <b id="sMoney">₺0</b></div>
@@ -47,6 +48,7 @@
       <div id="reaction"></div>
     </div>
   </div>
+  <div class="rotateTip">📱 Telefonu yan çevirirsen sahne daha büyük görünür</div>
   <footer>Tezgâha ya da tost makinesine dokun · Boşluk: tezgâh · Enter: servis · 0/1/2/3: hız · <span class="saveBadge" id="saveBadge"></span></footer>
 </div>
 
@@ -86,6 +88,12 @@
   <div class="box narrow">
     <h2>🥪 Umut Sandviç Evi</h2>
     <p>Bursa’da, Ulucami Caddesi’nde küçük bir sandviç dükkânın var. Müşteriler ne istediklerini <b>söylemez</b>, ruh hâllerini ve durumlarını anlatır. Sen anlarsın!</p>
+
+    <h4 style="text-align:center">👥 Kim oynuyor?</h4>
+    <p id="startStatus" style="text-align:center;color:#7a5a40">Kayıtlar kontrol ediliyor…</p>
+    <div id="playerList" class="people" style="margin-top:6px"></div>
+    <div class="row" id="newPlayerRow"><input id="newName" maxlength="24" placeholder="Adını yaz (ör. Ayşe)" style="font-family:VT323;font-size:20px;border:3px solid #3b2418;padding:4px 8px;width:220px"><button class="main ok" id="newPlayerBtn">▶ Yeni oyuncu olarak başla</button></div>
+    <details style="text-align:left;margin-top:10px"><summary style="cursor:pointer;font-family:'Pixelify Sans';font-size:16px">❓ Nasıl oynanır?</summary>
     <ul>
       <li>Sırayla: <b>ekmek → et → peynir → sebze → sos</b>. İstersen tost makinesine bas.</li>
       <li>Herkesin gizli sevdikleri ve sevmedikleri var. Tepkilerinden öğren, <b>📒 Defter</b>’e yazılır.</li>
@@ -93,8 +101,7 @@
       <li>Gün sonunda kazandığınla <b>malzeme, ekipman ve dekor</b> al. Yaratımlarını <b>imza tarif</b> yap.</li>
       <li>Sıra boşken günü 2x/4x hızlandır, müşteri gelince 1x’e döner.</li>
     </ul>
-    <p id="startStatus" style="text-align:center;color:#7a5a40">Kayıt kontrol ediliyor…</p>
-    <div class="row" id="startBtns"></div>
+    </details>
   </div>
 </div>
 
@@ -140,7 +147,8 @@
     <div class="row"><button id="copyBtn">📋 Kopyala</button></div>
     <h4>Yedekten yükle</h4>
     <textarea id="importBox" placeholder="Yedek kodunu buraya yapıştır"></textarea>
-    <div class="row"><button id="importBtn">⬆ Yükle</button><button id="resetBtn" class="ghost">🗑 Sıfırdan başla</button></div>
+    <div class="row"><button id="importBtn">⬆ Yükle</button><button id="resetBtn" class="ghost">🗑 Bu oyuncuyu sıfırla</button></div>
+    <div class="row"><button id="switchBtn">👥 Oyuncu değiştir</button></div>
     <div class="row"><button class="main" id="setClose">Kapat</button></div>
   </div>
 </div>

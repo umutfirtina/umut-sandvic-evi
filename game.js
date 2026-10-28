@@ -562,7 +562,7 @@ async function doSave() {
 }
 function openSettings() {
   $('setModal').classList.remove('hidden');
-  $('saveMode').textContent = Save.mode === 'cloud' ? '☁ Kayıt modu: Claude hesabın (bulut). Başka cihazdan açınca da devam edersin.' : '💾 Kayıt modu: bu tarayıcı. Başka cihaza taşımak için yedek kodunu kullan.';
+  $('saveMode').textContent = Save.mode === 'cloud' ? `👤 ${Save.playerName} · ☁ Kayıt: Claude hesabın (bulut).` : `👤 ${Save.playerName} · 💾 Kayıt: bu cihazın tarayıcısı. Başka cihaza geçerken yedek kodunu kullan.`;
   $('exportBox').value = Save.exportCode(P); $('resetBtn').dataset.sure = '';
   $('resetBtn').textContent = '🗑 Sıfırdan başla';
 }
@@ -571,7 +571,7 @@ $('copyBtn').onclick = async () => { try { await navigator.clipboard.writeText($
 $('importBtn').onclick = () => { const s = Save.importCode($('importBox').value); if (!s) { toast('Kod geçersiz 😕'); return; }
   P = Object.assign(newProfile(), s); doSave(); $('setModal').classList.add('hidden'); toast(`Yedek yüklendi: ${P.day}. gün`); S.running = false; startDay(); };
 $('resetBtn').onclick = async () => { const b = $('resetBtn'); if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = 'Emin misin? Tekrar bas'; return; }
-  await Save.wipe(); P = newProfile(); $('setModal').classList.add('hidden'); toast('Yeni oyun başladı'); S.running = false; startDay(); doSave(); };
+  await Save.wipe(); P = newProfile(); $('setModal').classList.add('hidden'); toast('Bu oyuncu sıfırdan başladı'); S.running = false; doSave(); startDay(); };
 
 // ================= GİRİŞ & KONTROLLER =================
 window.addEventListener('keydown', e => {
@@ -594,20 +594,21 @@ cv.addEventListener('click', e => {
 
 async function boot() {
   Save.init();
-  const btns = $('startBtns');
-  const go = (fresh) => { initAudio(); if (fresh) { P = newProfile(); doSave(); } $('startModal').classList.add('hidden'); startDay(); };
-  const saved = await Save.load();
-  $('startStatus').textContent = (Save.mode === 'cloud' ? '☁ Claude hesabına kayıt açık.' : '💾 Kayıt bu tarayıcıda tutulacak.') + (saved ? ` Kayıtlı oyun: ${saved.day}. gün, ₺${saved.money}.` : '');
-  btns.innerHTML = '';
-  if (saved) {
-    const cont = document.createElement('button'); cont.className = 'main ok'; cont.textContent = `▶ Devam et (${saved.day}. gün)`;
-    cont.onclick = () => { P = Object.assign(newProfile(), saved); go(false); };
-    const neu = document.createElement('button'); neu.className = 'main ghost'; neu.textContent = 'Yeni oyun';
-    neu.onclick = () => { if (!neu.dataset.sure) { neu.dataset.sure = 1; neu.textContent = 'Kayıt silinecek, emin misin?'; return; } go(true); };
-    btns.append(cont, neu);
-  } else { const b = document.createElement('button'); b.className = 'main ok'; b.textContent = 'Kepenkleri aç ☀️'; b.onclick = () => go(true); btns.append(b); }
-  $('saveBadge').textContent = Save.mode === 'cloud' ? '☁ bulut kaydı' : '💾 yerel kayıt';
+  const players = await Save.listPlayers();
+  $('startStatus').textContent = (Save.mode === 'cloud' ? '☁ Kayıtlar Claude hesabına yapılıyor.' : '💾 Kayıtlar bu cihazın tarayıcısında tutuluyor.') + (players.length ? ' Kaydını seç ya da yeni oyuncu ekle.' : ' Adını yaz ve başla!');
+  const list = $('playerList'); list.innerHTML = '';
+  const begin = (name, state) => { initAudio(); Save.setPlayer(name); P = state ? Object.assign(newProfile(), state) : newProfile();
+    $('sPlayer').textContent = Save.playerName; $('startModal').classList.add('hidden'); doSave(); startDay(); };
+  players.forEach(pl => { const d = document.createElement('button'); d.className = 'person'; d.style.cssText = 'text-align:left;cursor:pointer';
+    d.innerHTML = `<div style="font-size:26px">🧑‍🍳</div><div><b>${pl.name.replace(/[<>&]/g, '')}</b><br>${pl.day}. gün · ₺${pl.money}<br><small>${new Date(pl.savedAt).toLocaleDateString('tr-TR')}</small></div>`;
+    d.onclick = () => begin(pl.name, pl.state); list.append(d); });
+  const startNew = () => { const nm = $('newName').value.trim(); if (!nm) { toast('Önce adını yaz 🙂'); $('newName').focus(); return; }
+    const ex = players.find(p2 => p2.id === Save.idFor(nm)); if (ex) { toast(`“${ex.name}” zaten var, kaldığı yerden devam ediyor`); begin(ex.name, ex.state); return; }
+    begin(nm, null); };
+  $('newPlayerBtn').onclick = startNew; $('newName').onkeydown = e => { if (e.key === 'Enter') startNew(); };
+  $('saveBadge').textContent = Save.mode === 'cloud' ? '☁ bulut kaydı' : '💾 cihaz kaydı';
 }
+$('switchBtn').onclick = () => { doSave(); location.reload(); };
 
 // ================= DÖNGÜ =================
 S.tables = [52, 160, 268]; S.seats = []; S.tables.forEach(t => S.seats.push({ x: t - 13, y: 163, occ: null, t }, { x: t + 13, y: 163, occ: null, t }));
