@@ -245,6 +245,7 @@ button, canvas, .ing { touch-action: manipulation; -webkit-tap-highlight-color: 
     </div>
     <div class="side">
       <button class="big" id="openK">🥪 Tezgâha geç</button>
+      <button id="breakBtn">🪧 Mola ver</button>
       <div id="reaction"></div>
     </div>
   </div>
@@ -323,6 +324,19 @@ button, canvas, .ing { touch-action: manipulation; -webkit-tap-highlight-color: 
     <div id="shopPanel"></div>
     <p id="tomorrow" style="text-align:center;color:#7a5a40"></p>
     <div class="row"><button class="main ok" id="nextDayBtn">☀️ Kepenkleri aç (yeni gün)</button></div>
+  </div>
+</div>
+
+<!-- Mola -->
+<div class="overlay hidden" id="breakModal">
+  <div class="box narrow">
+    <h2>🪧 Mola ver</h2>
+    <p>Kapıya hangi notu asalım? Moladayken müşteri gelmez, zaman hızlı akar, sıradakiler de kızmadan sonra gelmek üzere ayrılır.</p>
+    <div id="notePresets" style="display:grid;gap:5px;margin-top:6px"></div>
+    <h4>⏱ Ne kadar?</h4>
+    <div class="row" style="margin-top:2px"><button data-dur="30">30 dk</button><button data-dur="60" class="on">1 saat</button><button data-dur="120">2 saat</button></div>
+    <div class="row"><button class="main ok" id="breakGo">🪧 Notu as, çık</button><button class="main" id="breakShop">🛒 Notu as, alışverişe git</button></div>
+    <div class="row"><button class="ghost" id="breakCancel">Vazgeç</button></div>
   </div>
 </div>
 
@@ -868,7 +882,7 @@ function drawShop(st) {
   const hot = st.toasting > 0, turbo = E.has('turbo');
   P(163, 75, 20, 7, turbo ? '#c0392b' : '#8b8f94'); P(163, 74, 20, 2, turbo ? '#e05a4a' : '#b5b9be'); P(165, 79, 16, 1, '#5e6266');
   P(180, 77, 2, 2, hot ? '#ff4d3d' : '#5a2020'); P(159, 78, 4, 1, '#3a3a3a'); if (turbo) { P(171, 76, 2, 1, '#ffd35c'); P(172, 77, 1, 1, '#ffd35c'); }
-  drawPerson(g, 120, 96, KEEPER, hot ? (Math.floor(performance.now() / 200) % 2 ? 1 : 3) : 0, false);
+  if (!st.brk) drawPerson(g, 120, 96, KEEPER, hot ? (Math.floor(performance.now() / 200) % 2 ? 1 : 3) : 0, false);
   // ipek perde
   if (D.has('ipek')) { for (let i = 0; i < 6; i++) { P(76 + i, 48, 1, 30 - i * 4, i % 2 ? '#c86bb0' : '#7b2d5b'); P(243 - i, 48, 1, 30 - i * 4, i % 2 ? '#f2c14e' : '#c86bb0'); } P(76, 48, 168, 2, '#7b2d5b'); }
   // tente
@@ -876,7 +890,7 @@ function drawShop(st) {
   P(68, 38, 184, 1, '#8a2a1c');
   if (st.weather === 'karli') { P(68, 37, 184, 2, '#ffffff'); P(78, 25, 164, 1, '#ffffff'); }
   // açık/kapalı
-  P(55, 52, 1, 6, '#6b4a33'); P(51, 58, 10, 6, st.closing ? '#7a2a2a' : '#3f8f6a'); txt(st.closing ? 'KAPALI' : 'AÇIK', 56, 61.2, 4, '#fff');
+  P(55, 52, 1, 6, '#6b4a33'); P(49, 58, 14, 6, st.closing ? '#7a2a2a' : st.brk ? '#c98a1a' : '#3f8f6a'); txt(st.closing ? 'KAPALI' : st.brk ? 'MOLA' : 'AÇIK', 56, 61.2, 4, '#fff');
   // karagöz perdesi
   if (D.has('karagoz')) { P(49, 68, 24, 20, '#7a4c2c'); P(51, 70, 20, 16, '#fff6dc');
     const b = Math.floor(performance.now() / 400) % 2;
@@ -899,6 +913,19 @@ function drawCounterFront(st) {
   P(238, 99, 5, 5, '#1f5fbf'); P(239, 100, 3, 3, '#fff'); P(240, 101, 1, 1, '#1f5fbf'); P(240, 97, 1, 2, '#6b4a33');
 }
 
+function wrapText(text, maxW, size) {
+  g.font = `${size}px VT323`; const words = text.split(' '), lines = []; let cur = '';
+  words.forEach(w => { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; });
+  if (cur) lines.push(cur); return lines.slice(0, 4);
+}
+function drawBreakSign(st) {
+  if (!st.brk) return;
+  const lines = wrapText(st.brk.text, 58, 5), h = 6 + lines.length * 5, x = 130, y = 66;
+  P(x + 8, 49, 1, y - 49, '#5a3820'); P(x + 54, 49, 1, y - 49, '#5a3820');
+  P(x - 1, y - 1, 66, h + 2, '#5a3820'); P(x, y, 64, h, '#f3e6c8'); P(x, y, 64, 1, '#fffaf0');
+  lines.forEach((l, i) => txt(l, x + 32, y + 4.5 + i * 5, 5, '#2a1d17'));
+  P(x + 2, y + h - 2, 60, 1, '#e0cfa8');
+}
 function drawGround(st) {
   const snow = st.weather === 'karli', wet = st.weather === 'yagmurlu';
   P(0, 112, W, 58, snow ? '#d8dde2' : wet ? '#9c978c' : '#bdb6a6');
@@ -1038,7 +1065,7 @@ function layer(SP, f, cx, y, w, toasted, idx) {
 window.Art = {
   setCtx: ctx => { g = ctx; }, P, txt, W, H, darken, lerpC, nightK,
   drawPerson, drawCat, drawBackground, drawShop, drawCounterFront, drawGround, drawTablesBack, drawTablesFront,
-  drawWeather, drawNight, bubble, icon, drawStack,
+  drawWeather, drawNight, drawBreakSign, bubble, icon, drawStack,
 };
 })();
 
@@ -1152,6 +1179,8 @@ function newProfile() {
 }
 let P = newProfile();
 const unl = () => new Set(P.unlocked);
+const WEEK = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+const weekday = () => WEEK[(P.day - 1) % 7];
 
 // ================= GÜNLÜK DURUM =================
 const S = { running: false, minutes: OPEN, speed: 1, closing: false, weather: 'gunesli',
@@ -1378,15 +1407,17 @@ function update(dt) {
   S.customers.forEach(c => { if (c.bubble) c.bubble.t -= dt; });
   if (S.sw.toasting > 0) { S.sw.toasting -= dt; if (S.sw.toasting <= 0) { S.sw.toasting = 0; S.sw.toasted = true; sfx.bell(); refreshBoard(); } }
   if (!S.running) return;
-  const sp = S.closing ? Math.max(S.speed, 4) : S.speed, gdt = dt * sp;
+  const sp = S.closing ? Math.max(S.speed, 4) : (S.brk ? (S.speed === 0 ? 0 : 8) : S.speed), gdt = dt * sp;
+  if (S.brk && S.minutes >= S.brk.until) endBreak();
+  if (!S.brk && !S.fridayHint && weekday() === 'Cuma' && S.minutes > 735 && S.minutes < 790) { S.fridayHint = true; toast('🕌 Cuma vakti! İstersen “Mola ver” ile kapıya not asabilirsin.', 3500); }
   if (!S.closing) {
     S.minutes = Math.min(CLOSE, S.minutes + gdt * MIN_PER_SEC);
     const q = queueList();
-    if (S.minutes >= S.nextSpawn && S.minutes < LAST_SPAWN) {
+    if (!S.brk && S.minutes >= S.nextSpawn && S.minutes < LAST_SPAWN) {
       if (q.length < 3) { spawn(); let gap = rnd(26, 46) * (1.24 - P.rep * .08); if (has('neon', 'decor') && S.minutes > 1020) gap *= .8; S.nextSpawn = S.minutes + gap; }
       else S.nextSpawn = S.minutes + 8;
     }
-    if (S.minutes >= CLOSE) { S.closing = true; queueList().forEach(c => leave(c, '👋')); toast('Kapanış saati! 🌙'); closeKitchen(); }
+    if (S.minutes >= CLOSE) { S.brk = null; S.closing = true; queueList().forEach(c => leave(c, '👋')); toast('Kapanış saati! 🌙'); closeKitchen(); }
   }
   const step = 26 * gdt, q = queueList();
   S.customers.forEach(c => {
@@ -1408,19 +1439,21 @@ function update(dt) {
 }
 
 // ================= ÇİZİM =================
-function sceneState() { return { minutes: S.minutes, weather: S.weather, decor: new Set(P.decor), equip: new Set(P.equip), closing: S.closing, toasting: S.sw.toasting, birds: S.birds }; }
+function sceneState() { return { brk: S.brk, minutes: S.minutes, weather: S.weather, decor: new Set(P.decor), equip: new Set(P.equip), closing: S.closing, toasting: S.sw.toasting, birds: S.birds }; }
 function render() {
   g.setTransform(4, 0, 0, 4, 0, 0);
   const st = sceneState();
   A.drawBackground(st); A.drawShop(st); A.drawCounterFront(st);
-  if (cat.floor === 'counter' && !cat.jump) A.drawCat(cat.x, cat.y, cat.dir, cat.state, cat.frame);
+  const catAway = S.brk && S.brk.text.startsWith('Pamuk');
+  if (!catAway && cat.floor === 'counter' && !cat.jump) A.drawCat(cat.x, cat.y, cat.dir, cat.state, cat.frame);
   A.drawGround(st); A.drawTablesBack(S.seats);
   S.customers.filter(c => c.state === 'eat').forEach(c => A.drawPerson(g, c.x, c.y, c.look, 0, true));
   A.drawTablesFront(S.tables, S.seats);
   const tea = has('cay', 'equip');
   const list = S.customers.filter(c => c.state !== 'eat').map(c => ({ y: c.y, f: () => A.drawPerson(g, c.x, c.y, c.look, c.moving ? c.frame : 0, false, tea && c.state === 'queue' && c.arrived ? 'cay' : null) }));
-  if (cat.floor === 'ground' || cat.jump) list.push({ y: cat.y, f: () => A.drawCat(cat.x, cat.y, cat.dir, cat.jump ? 'walk' : cat.state, cat.frame) });
+  if (!catAway && (cat.floor === 'ground' || cat.jump)) list.push({ y: cat.y, f: () => A.drawCat(cat.x, cat.y, cat.dir, cat.jump ? 'walk' : cat.state, cat.frame) });
   list.sort((a, b) => a.y - b.y).forEach(o => o.f());
+  A.drawBreakSign(st);
   A.drawWeather(st);
   const q = queueList();
   S.customers.forEach(c => {
@@ -1433,7 +1466,7 @@ function render() {
     A.P(162, 59 + b, 23, 7, '#2a1d17'); A.P(163, 60 + b, 21, 5, '#d8432f');
     A.P(170, 66 + b, 7, 1, '#2a1d17'); A.P(171, 66 + b, 5, 1, '#ffd35c'); A.P(172, 67 + b, 3, 1, '#ffd35c'); A.P(173, 68 + b, 1, 1, '#ffd35c');
     A.txt('dokun', 173.5, 62.7 + b, 5, '#fff', 'px'); }
-  if (cat.state === 'sleep' && !cat.jump) { const zz = Math.floor(performance.now() / 600) % 3; A.txt('z'.repeat(zz + 1), cat.x + (cat.dir > 0 ? 6 : -6), cat.y - 10, 6, '#fff'); }
+  if (!catAway && cat.state === 'sleep' && !cat.jump) { const zz = Math.floor(performance.now() / 600) % 3; A.txt('z'.repeat(zz + 1), cat.x + (cat.dir > 0 ? 6 : -6), cat.y - 10, 6, '#fff'); }
   S.particles.forEach(p => { const a = 1 - p.t / p.life; g.globalAlpha = Math.max(0, a);
     A.txt(p.text, p.x + .4, p.y - p.t * 10 + .4, 7, '#2a1d17', 'px'); A.txt(p.text, p.x, p.y - p.t * 10, 7, p.color, 'px'); g.globalAlpha = 1; });
   if (S.sw.toasting > 0) { const t = performance.now() / 200; for (let i = 0; i < 3; i++) A.P(167 + i * 5 + Math.round(Math.sin(t + i)), 70 - ((t * 3 + i * 4) % 8), 1, 2, 'rgba(255,255,255,.8)'); }
@@ -1462,11 +1495,14 @@ function buildCatPanel() {
   if (S.catTab === 'menu') {
     const box = document.createElement('div'); box.className = 'recipes';
     const fmt = r => `${r.bread ? ING[r.bread].name + ' · ' : ''}${r.items.map(i => ING[i].name).join(', ')}${r.toast ? ' · 🔥 tost' : ''}`;
-    P.sigs.forEach(r => { const d = document.createElement('div'); d.className = 'rec';
-      d.innerHTML = `<b class="sig">✨ ${r.name}</b> <span style="float:right">₺${r.price}</span><br>${fmt(r)}`; box.append(d); });
-    Object.values(RECIPES).forEach(r => { const ok = (!r.bread || u.has(r.bread)) && r.items.every(i => u.has(i));
-      const d = document.createElement('div'); d.className = 'rec' + (ok ? '' : ' lock');
-      d.innerHTML = `<b>${ok ? '' : '🔒 '}${r.name}</b> <span style="float:right">₺${r.price}</span><br>${fmt(r)}`; box.append(d); });
+    const tip = document.createElement('div'); tip.style.cssText = 'font-size:16px;color:#7a5a40;margin-bottom:4px';
+    tip.textContent = '👆 Bir tarife dokun, malzemeler tezgâha kendiliğinden dizilsin.'; el.append(tip);
+    const addRec = (r, sig) => { const ok = (!r.bread || u.has(r.bread)) && r.items.every(i => u.has(i));
+      const d = document.createElement('button'); d.className = 'rec' + (ok ? '' : ' lock'); d.style.cssText = 'text-align:left;font-family:VT323;box-shadow:none;width:100%';
+      d.innerHTML = `<b${sig ? ' class="sig"' : ''}>${ok ? (sig ? '✨ ' : '') : '🔒 '}${r.name}</b> <span style="float:right">₺${r.price}</span><br>${fmt(r)}`;
+      d.disabled = !ok || busy || !S.running; d.onclick = () => applyRecipe(r); box.append(d); };
+    P.sigs.forEach(r => addRec(r, true));
+    Object.values(RECIPES).forEach(r => addRec(r, false));
     el.append(box); return;
   }
   const grid = document.createElement('div'); grid.className = 'grid';
@@ -1486,6 +1522,17 @@ function buildCatPanel() {
   el.append(grid);
   if (S.catTab !== 'ekmek' && !sw.bread) { const p = document.createElement('div'); p.style.cssText = 'font-size:17px;color:#7a5a40;margin-top:6px'; p.textContent = 'Önce Ekmek sekmesinden bir ekmek seç.'; el.append(p); }
 }
+function applyRecipe(r) {
+  if (S.sw.toasting > 0 || !S.running) return;
+  const u = unl();
+  const bread = r.bread || (S.sw.bread && u.has(S.sw.bread) ? S.sw.bread : (u.has('somun') ? 'somun' : BREADS_FALLBACK()));
+  S.sw = { bread, fills: r.items.filter(i => u.has(i)).slice(0, maxFills()), toasted: false, toasting: 0 };
+  sfx.buy();
+  if (r.toast) { S.sw.toasting = toastTime(); beep(300, .3, 'sawtooth', .03, 260); toast(`📖 ${r.name} dizildi, tost makinesinde 🔥`); }
+  else toast(`📖 ${r.name} dizildi!`);
+  refreshBoard();
+}
+const BREADS_FALLBACK = () => Object.keys(ING).find(k => ING[k].bread && unl().has(k));
 function refreshBoard() {
   const sw = S.sw, busy = sw.toasting > 0;
   $('sandLabel').textContent = !sw.bread ? 'Önce bir ekmek seç.' : (sw.toasted ? '🔥 ' : '🥪 ') + ING[sw.bread].name + (sw.fills.length ? ' + ' + sw.fills.map(f => ING[f].name).join(', ') : ' (boş)');
@@ -1502,12 +1549,13 @@ $('serveBtn').onclick = serve;
 
 function openKitchen() {
   if (!S.running) return;
+  if (S.brk) { toast('Moladasın 🪧 Önce “Dükkâna dön”e bas.'); return; }
   S.kitchen = true; $('kitchen').classList.remove('hidden'); $('backdrop').classList.remove('hidden');
   if (!S.sw.bread) S.catTab = 'ekmek';
   syncKitchenOrder(true); refreshBoard(); sfx.page();
 }
 function closeKitchen() { S.kitchen = false; $('kitchen').classList.add('hidden'); $('backdrop').classList.add('hidden'); }
-$('openK').onclick = openKitchen; $('closeK').onclick = closeKitchen; $('backdrop').onclick = closeKitchen;
+$('openK').onclick = () => S.brk ? endBreak(true) : openKitchen(); $('closeK').onclick = closeKitchen; $('backdrop').onclick = closeKitchen;
 
 function bookLine(c) {
   const b = P.book[c.cid];
@@ -1539,11 +1587,16 @@ function drawPortrait(cnv, look, size = 96) {
 // ================= ÜST BİLGİ =================
 let lastKey = null;
 function syncUI() {
-  $('sDay').textContent = P.day; $('sClock').textContent = fmtTime(S.minutes); $('sMoney').textContent = '₺' + P.money; $('sRep').textContent = P.rep.toFixed(1);
+  $('sDay').textContent = P.day + ' · ' + weekday().slice(0, 3); $('sClock').textContent = fmtTime(S.minutes); $('sMoney').textContent = '₺' + P.money; $('sRep').textContent = P.rep.toFixed(1);
   $('sWeather').textContent = WEATHER[S.weather].emo; $('sWeather').title = WEATHER[S.weather].name;
-  const q = queueList(), c = q[0], id = c && c.arrived ? c.id : null, key = id ?? (c ? 'coming' : 'none');
+  const q = queueList(), c = q[0], id = c && c.arrived ? c.id : null, key = S.brk ? 'brk' + Math.floor(S.minutes / 5) : (id ?? (c ? 'coming' : 'none'));
+  $('breakBtn').disabled = !S.running || S.closing;
+  $('breakBtn').textContent = S.brk ? '🏪 Alışveriş yap' : '🪧 Mola ver';
+  $('openK').textContent = S.brk ? '↩ Dükkâna dön' : '🥪 Tezgâha geç';
   if (key !== lastKey) { lastKey = key;
-    if (id) { $('custName').textContent = c.ch.name; $('custMood').textContent = moodTag(c); $('custMood').classList.remove('hidden');
+    if (S.brk) { $('custMood').classList.add('hidden'); $('custName').textContent = '🪧 Moladasın';
+      $('custHint').textContent = `Kapıdaki not: “${S.brk.text}” · ${fmtTime(S.brk.until)}’da dükkâna dönüyorsun. Mola sırasında dükkândan alışveriş yapabilirsin.`; drawPortrait($('portrait'), null); }
+    else if (id) { $('custName').textContent = c.ch.name; $('custMood').textContent = moodTag(c); $('custMood').classList.remove('hidden');
       $('custHint').textContent = '“' + c.hint + '”'; drawPortrait($('portrait'), c.look); sfx.bell();
       if (S.speed > 1) { setSpeed(1); toast('Müşteri geldi, hız 1x’e döndü'); } }
     else { $('custMood').classList.add('hidden'); $('custName').textContent = c ? 'Biri geliyor…' : 'Henüz müşteri yok';
@@ -1554,7 +1607,7 @@ function syncUI() {
   const setBar = el => { if (id) { const k = Math.max(0, c.patience / c.maxP); el.style.width = (k * 100) + '%'; el.style.background = k > .5 ? '#5bbf4a' : k > .25 ? '#f1c40f' : '#e74c3c'; } else el.style.width = '0%'; };
   setBar($('patFill')); if (S.kitchen) { setBar($('kPat')); syncKitchenOrder(false); A.drawStack($('stack'), S.sw, 3); if (S.sw.toasting > 0) drawToastBar(); }
   $('queueInfo').textContent = q.length > 1 ? `Sırada ${q.length - 1} kişi daha bekliyor` : '';
-  $('fastHint').style.display = (S.running && !S.closing && !q.length && S.speed < 4 && S.speed > 0) ? 'block' : 'none';
+  $('fastHint').style.display = (S.running && !S.closing && !S.brk && !q.length && S.speed < 4 && S.speed > 0) ? 'block' : 'none';
 }
 function drawToastBar() { const sg = $('stack').getContext('2d'); sg.setTransform(3, 0, 0, 3, 0, 0);
   sg.fillStyle = '#2a1d17'; sg.fillRect(20, 3, 80, 5); sg.fillStyle = '#ff7a3d'; sg.fillRect(21, 4, 78 * (1 - S.sw.toasting / toastTime()), 3);
@@ -1576,7 +1629,7 @@ function startDay() {
   S.seats = []; S.tables.forEach(t => S.seats.push({ x: t - 13, y: 163, occ: null, t }, { x: t + 13, y: 163, occ: null, t }));
   S.sw = { bread: null, fills: [], toasted: false, toasting: 0 }; S.catTab = 'ekmek';
   $('reaction').innerHTML = ''; lastKey = -1; S.running = true; refreshBoard(); sfx.bell();
-  toast(`${P.day}. gün · ${WEATHER[S.weather].emo} ${WEATHER[S.weather].name}`, 2400);
+  toast(`${P.day}. gün · ${weekday()} · ${WEATHER[S.weather].emo} ${WEATHER[S.weather].name}`, 2400); S.brk = null; S.fridayHint = false;
 }
 function endDay() {
   S.ended = true; S.running = false; closeKitchen();
@@ -1608,14 +1661,14 @@ function endDay() {
   $('endModal').classList.remove('hidden'); refreshBoard();
 }
 $('toShopBtn').onclick = () => { $('endModal').classList.add('hidden'); openShop(); };
-$('nextDayBtn').onclick = () => { $('shopModal').classList.add('hidden'); doSave(); startDay(); };
+$('nextDayBtn').onclick = () => { $('shopModal').classList.add('hidden'); doSave(); if (S.shopMid) { S.shopMid = false; refreshBoard(); return; } startDay(); };
 
 // ================= DÜKKÂN =================
 let shopTab = 'malzeme';
-function openShop() { $('shopModal').classList.remove('hidden'); renderShop(); }
+function openShop(mid) { S.shopMid = !!mid; $('nextDayBtn').textContent = mid ? '↩ Alışverişi bitir' : '☀️ Kepenkleri aç (yeni gün)'; $('shopModal').classList.remove('hidden'); renderShop(); }
 function renderShop() {
   $('shopMoney').textContent = `· 💰 ₺${P.money}`;
-  $('tomorrow').textContent = `Yarın: ${WEATHER[P.nextWeather || 'gunesli'].emo} ${WEATHER[P.nextWeather || 'gunesli'].name} · ${P.day}. gün`;
+  if (S.shopMid) $('tomorrow').textContent = 'Mola sırasında alışveriş: aldıkların hemen tezgâhta.'; else $('tomorrow').textContent = `Yarın: ${WEATHER[P.nextWeather || 'gunesli'].emo} ${WEATHER[P.nextWeather || 'gunesli'].name} · ${P.day}. gün`;
   const tabs = $('shopTabs'); tabs.innerHTML = '';
   [['malzeme', '🥬 Malzemeler'], ['ekipman', '🛠 Ekipman'], ['dekor', '🎨 Dekor']].forEach(([id, nm]) => {
     const b = document.createElement('button'); b.textContent = nm; b.classList.toggle('on', shopTab === id); b.onclick = () => { shopTab = id; renderShop(); }; tabs.append(b); });
@@ -1641,6 +1694,36 @@ function renderShop() {
   }
   panel.append(grid);
 }
+
+// ================= MOLA =================
+const NOTES = [['🕌', 'Cumaya gittim, geleceğim'], ['🎒', 'Kızımın veli toplantısı var, geleceğim'], ['🐈', 'Pamuk’u aşıya götürdüm, miyavlayarak döneceğiz!']];
+let breakDur = 60, breakText = null;
+function openBreak() {
+  if (!S.running || S.closing) return;
+  if (S.brk) { openShop(true); return; }
+  closeKitchen(); $('breakModal').classList.remove('hidden');
+  const list = $('notePresets'); list.innerHTML = '';
+  const choose = t => { breakText = t; [...list.children].forEach(b => b.classList.toggle('on', b.dataset.t === t)); };
+  NOTES.forEach(([e, t]) => { const b = document.createElement('button'); b.dataset.t = t; b.textContent = e + ' ' + t; b.style.cssText = 'text-align:left;font-size:16px;padding:8px'; b.onclick = () => { choose(t); sfx.click(); }; list.append(b); });
+  choose(weekday() === 'Cuma' && S.minutes > 700 && S.minutes < 820 ? NOTES[0][1] : (NOTES.some(n => n[1] === P.lastNote) ? P.lastNote : NOTES[0][1]));
+  document.querySelectorAll('[data-dur]').forEach(b => { b.classList.toggle('on', +b.dataset.dur === breakDur); b.onclick = () => { breakDur = +b.dataset.dur; document.querySelectorAll('[data-dur]').forEach(x => x.classList.toggle('on', x === b)); }; });
+}
+function startBreak(text, dur, shop) {
+  text = (text || '').trim().slice(0, 48) || 'Hemen dönerim';
+  S.brk = { text, until: Math.min(CLOSE, S.minutes + dur) }; P.lastNote = text;
+  queueList().forEach(c => leave(c, pick(['🙂', '👌', '🕐'])));
+  $('breakModal').classList.add('hidden'); toast(`🪧 Not asıldı: “${text}”`); sfx.page(); lastKey = null;
+  if (shop) openShop(true);
+}
+function endBreak(early) {
+  if (!S.brk) return; const vet = S.brk.text.startsWith('Pamuk'); S.brk = null;
+  if (vet) { cat.x = 120; cat.y = 150; cat.floor = 'ground'; cat.jump = null; cat.state = 'sit'; cat.t = 3; setTimeout(() => { particle(cat.x, cat.y - 12, '💉❤', '#ff6b81', 1.8); sfx.meow(); }, 300); } S.nextSpawn = S.minutes + 4; lastKey = null;
+  toast(early ? '↩ Dükkâna döndün, kepenkler açık!' : '🔔 Mola bitti, dükkâna döndün!'); sfx.bell();
+}
+$('breakBtn').onclick = openBreak;
+$('breakGo').onclick = () => startBreak(breakText, breakDur, false);
+$('breakShop').onclick = () => startBreak(breakText, breakDur, true);
+$('breakCancel').onclick = () => $('breakModal').classList.add('hidden');
 
 // ================= DEFTER =================
 let bookTab = 'musteri';
