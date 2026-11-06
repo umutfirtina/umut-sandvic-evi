@@ -167,10 +167,6 @@ button, canvas, .ing { touch-action: manipulation; -webkit-tap-highlight-color: 
 }
 
 /* ---------- Telefon yatay (yan çevrilmiş) ---------- */
-.rotateTip { display: none; }
-@media (max-width: 640px) and (orientation: portrait) {
-  .rotateTip { display: block; text-align: center; color: #a88a6a; font-size: 15px; margin-top: 6px; }
-}
 @media (orientation: landscape) and (max-height: 540px) {
   html, body { font-size: 16px; }
   #app { max-width: none; padding: 4px 6px; display: grid; grid-template-columns: auto minmax(220px, 1fr); grid-template-rows: auto 1fr; gap: 6px; height: 100vh; height: 100dvh; }
@@ -206,12 +202,57 @@ button, canvas, .ing { touch-action: manipulation; -webkit-tap-highlight-color: 
   .overlay { align-items: flex-start; padding: 4px; } .overlay .box { max-height: 98dvh; padding: 8px 12px; }
 }
 
+/* ---------- v1.4: sipariş / yorum kartları ---------- */
+#strip { grid-template-columns: 1fr auto; }
+#strip .cardTitle { grid-column: 1 / -1; }
+.cardTitle { font-family: 'Pixelify Sans'; font-size: 14px; color: var(--red); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.orderRow { display: flex; gap: 8px; align-items: flex-start; }
+.orderInfo { flex: 1; min-width: 0; }
+.speech { position: relative; background: #fff; border: 3px solid var(--ink); padding: 5px 8px; margin-top: 4px; font-size: 20px; line-height: 1.05; }
+.speech::before { content: ''; position: absolute; left: -9px; top: 10px; border: 6px solid transparent; border-right-color: var(--ink); }
+#reactCard { margin-top: 8px; }
+#reaction { font-size: 19px; line-height: 1.1; }
+#reaction.flash { animation: flash .9s; }
+@keyframes flash { 0% { background: #fff3a0; } 100% { background: transparent; } }
+.tin { font-family: VT323; font-size: 20px; border: 3px solid #3b2418; padding: 4px 8px; width: 240px; max-width: 100%; }
+
+/* ---------- eğitim ---------- */
+#tutBox { position: fixed; left: 50%; top: 10px; transform: translateX(-50%); z-index: 45; width: min(560px, 94vw);
+  background: #fffaf0; border: 4px solid var(--red); box-shadow: 0 5px 0 #120b09; padding: 10px 12px; font-size: 19px; line-height: 1.15; }
+#tutBox small { font-family: 'Pixelify Sans'; color: var(--red); margin-right: 4px; }
+.tut-hl { outline: 4px solid #ff5a3a !important; outline-offset: 3px; animation: tutp 1s infinite; position: relative; z-index: 21; }
+@keyframes tutp { 50% { outline-color: #ffd35c; } }
+
+/* ---------- dikey telefon: sahne üstte sabit, tezgâh hemen altında ---------- */
+@media (max-width: 720px) and (orientation: portrait) {
+  #strip { grid-template-columns: 1fr; }
+  #strip .side { flex-direction: row; max-width: none; min-width: 0; }
+  #strip .side button { flex: 1; }
+  #strip .side #openK { flex: 2; }
+  .speech { font-size: 18px; }
+  #stage { position: sticky; top: 0; z-index: 15; }
+  body.kopen { overflow: hidden; }
+  body.kopen #app { padding-bottom: 100vh; }
+  #kitchen #stack { height: 12vh !important; }
+  #kitchen .kOrder canvas.port { width: 40px; height: 40px; }
+  #kitchen .kOrder .hint { font-size: 15px !important; }
+  #kitchen #kBook { font-size: 13px; }
+  #kitchen .kHead h3 small { display: none; }
+  #kitchen { top: auto; border-top: 4px solid var(--ink); animation: none; padding-top: 4px; }
+  #kitchen .kHead { margin-bottom: 2px; }
+  #kitchen .kHead button { padding: 3px 8px; font-size: 13px; }
+  #kitchen .kOrder .hint { background: #fff; border: 2px solid var(--ink); padding: 3px 6px; font-size: 16px; }
+  #tutBox { top: 4px; padding: 6px 10px; font-size: 16px; }
+  #tutBox .row { margin-top: 3px !important; }
+  #tutBox button { padding: 3px 8px; font-size: 13px; }
+}
+
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <h1>UMUT SANDVİÇ EVİ<small>Bursa · Ulucami Cd.</small></h1>
+    <h1><span id="shopTitle">UMUT SANDVİÇ EVİ</span><small>Bursa · Ulucami Cd.</small></h1>
     <div class="stats">
       <div>👤 <b id="sPlayer">—</b></div>
       <div>Gün <b id="sDay">1</b> <span id="sWeather" title="Hava">☀️</span></div>
@@ -236,27 +277,32 @@ button, canvas, .ing { touch-action: manipulation; -webkit-tap-highlight-color: 
   </div>
 
   <div id="strip" class="card">
-    <canvas class="port" id="portrait" width="96" height="96"></canvas>
-    <div>
-      <div><span class="nm" id="custName">Henüz müşteri yok</span><span class="mood hidden" id="custMood"></span></div>
-      <div class="hint" id="custHint">Dükkân sakin… Pamuk güneşleniyor.</div>
-      <div class="bar"><i id="patFill"></i></div>
-      <div id="queueInfo"></div>
+    <div class="cardTitle">🗣️ Sipariş</div>
+    <div class="orderRow">
+      <canvas class="port" id="portrait" width="96" height="96"></canvas>
+      <div class="orderInfo">
+        <div><span class="nm" id="custName">Henüz müşteri yok</span><span class="mood hidden" id="custMood"></span></div>
+        <div class="speech" id="custHint">Dükkân sakin… Pamuk güneşleniyor.</div>
+        <div class="bar"><i id="patFill"></i></div>
+        <div id="queueInfo"></div>
+      </div>
     </div>
     <div class="side">
       <button class="big" id="openK">🥪 Tezgâha geç</button>
       <button id="breakBtn">🪧 Mola ver</button>
-      <div id="reaction"></div>
     </div>
   </div>
-  <div class="rotateTip">📱 Telefonu yan çevirirsen sahne daha büyük görünür</div>
-  <footer>Tezgâha ya da tost makinesine dokun · Boşluk: tezgâh · Enter: servis · 0/1/2/3: hız · <span class="saveBadge" id="saveBadge"></span></footer>
+  <div id="reactCard" class="card">
+    <div class="cardTitle">💬 Son yorum</div>
+    <div id="reaction">Henüz yorum yok. İlk müşterini mutlu et!</div>
+  </div>
+  <footer><b>v1.4</b> · Tezgâha ya da tost makinesine dokun · Boşluk: tezgâh · Enter: servis · 0/1/2/3: hız · <span class="saveBadge" id="saveBadge"></span></footer>
 </div>
 
 <!-- Tezgâh -->
 <div id="backdrop" class="hidden"></div>
 <div id="kitchen" class="hidden">
-  <div class="kHead"><h3>🥪 Tezgâh</h3><button id="closeK">✕ Kapat</button></div>
+  <div class="kHead"><h3>🥪 Tezgâh <small style="font-size:13px;color:#7a5a40">🗣️ sipariş aşağıda</small></h3><button id="closeK">✕ Kapat</button></div>
   <div class="kOrder">
     <canvas class="port" id="kPortrait" width="96" height="96"></canvas>
     <div style="flex:1">
@@ -287,13 +333,13 @@ button, canvas, .ing { touch-action: manipulation; -webkit-tap-highlight-color: 
 <!-- Başlangıç -->
 <div class="overlay" id="startModal">
   <div class="box narrow">
-    <h2>🥪 Umut Sandviç Evi</h2>
+    <h2>🥪 Umut Sandviç Evi <small style="font-size:13px;color:#7a5a40">v1.4</small></h2>
     <p>Bursa’da, Ulucami Caddesi’nde küçük bir sandviç dükkânın var. Müşteriler ne istediklerini <b>söylemez</b>, ruh hâllerini ve durumlarını anlatır. Sen anlarsın!</p>
 
     <h4 style="text-align:center">👥 Kim oynuyor?</h4>
     <p id="startStatus" style="text-align:center;color:#7a5a40">Kayıtlar kontrol ediliyor…</p>
     <div id="playerList" class="people" style="margin-top:6px"></div>
-    <div class="row" id="newPlayerRow"><input id="newName" maxlength="24" placeholder="Adını yaz (ör. Ayşe)" style="font-family:VT323;font-size:20px;border:3px solid #3b2418;padding:4px 8px;width:220px"><button class="main ok" id="newPlayerBtn">▶ Yeni oyuncu olarak başla</button></div>
+    <div class="row" id="newPlayerRow"><input id="newName" maxlength="24" placeholder="Adını yaz (ör. Ayşe)" class="tin"><input id="newShop" maxlength="22" placeholder="Dükkânının adı (ör. Ayşe’nin Tostçusu)" class="tin"><button class="main ok" id="newPlayerBtn">▶ Yeni oyuncu olarak başla</button></div>
     <details style="text-align:left;margin-top:10px"><summary style="cursor:pointer;font-family:'Pixelify Sans';font-size:16px">❓ Nasıl oynanır?</summary>
     <ul>
       <li>Sırayla: <b>ekmek → et → peynir → sebze → sos</b>. İstersen tost makinesine bas.</li>
@@ -356,6 +402,8 @@ button, canvas, .ing { touch-action: manipulation; -webkit-tap-highlight-color: 
     <h2>⚙ Kayıt</h2>
     <p id="saveMode"></p>
     <p>İlerlemen her gün sonunda ve her alışverişte otomatik kaydedilir. Başka bir cihaza taşımak için yedek kodunu kopyala, orada yapıştır.</p>
+    <h4>🪧 Dükkânın adı</h4>
+    <div class="row" style="margin-top:2px"><input id="shopNameEdit" maxlength="22" class="tin"><button id="shopNameSave">Tabelayı değiştir</button></div>
     <h4>Yedek kodu</h4>
     <textarea id="exportBox" readonly></textarea>
     <div class="row"><button id="copyBtn">📋 Kopyala</button></div>
@@ -367,6 +415,7 @@ button, canvas, .ing { touch-action: manipulation; -webkit-tap-highlight-color: 
   </div>
 </div>
 
+<div id="tutBox" class="hidden"><div id="tutText"></div><div class="row" style="margin-top:6px"><button id="tutNext" class="ok hidden">Başlayalım! ☀️</button><button id="tutSkip" class="ghost">Eğitimi geç</button></div></div>
 <div id="toast"></div>
 <script>
 /* Umut Sandviç Evi — oyun verisi
@@ -381,6 +430,7 @@ const CATS = [
   { id: 'sebze', name: 'Sebze', emo: '🥬' },
   { id: 'sos', name: 'Sos', emo: '🥫' },
   { id: 'ekstra', name: 'Ekstra', emo: '🍯' },
+  { id: 'icecek', name: 'İçecek', emo: '🥤', needs: 'dolap' },
 ];
 
 /* shape: çizim şablonu (ikon + tezgâhtaki katman). c1/c2: renkler.
@@ -445,7 +495,25 @@ const ING = {
   kaymak:    { name: 'Kaymak',       cat: 'ekstra', price: 7, cost: 300, tags: ['tatli', 'kremali', 'kahvalti'], shape: 'spread', c1: '#fff8e6', c2: '#efe2c0' },
   findik:    { name: 'Fındık kreması', cat: 'ekstra', price: 6, cost: 350, tags: ['tatli', 'kahvalti'], shape: 'spread', c1: '#6a3a1a', c2: '#9a5a2a' },
 };
-Object.values(ING).forEach(i => { i.tags = i.tags || []; });
+/* ---- İçecekler (İçecek dolabı alınınca açılır) ----
+ * drink: { style, c1, c2 } çizim; dtags: içecek özellikleri (ruh hâli istekleriyle eşleşir) */
+Object.assign(ING, {
+  ayran:     { name: 'Ayran',            cat: 'icecek', price: 10, cost: 0,   dtags: ['soguk', 'ferah', 'nostaljik', 'hafif', 'ayran', 'ucuz'], drink: { style: 'cup', c1: '#fbfbf5', c2: '#e6eef0' } },
+  cay:       { name: 'Demli çay',        cat: 'icecek', price: 8,  cost: 0,   dtags: ['sicak', 'kafein', 'nostaljik', 'kahvalti', 'ucuz'], drink: { style: 'tulip', c1: '#b8401a', c2: '#e8743a' } },
+  gazoz:     { name: 'Meyveli gazoz',    cat: 'icecek', price: 12, cost: 0,   dtags: ['soguk', 'gazli', 'tatli', 'nostaljik'], drink: { style: 'bottle', c1: '#f2a23a', c2: '#ffd36a' } },
+  soda:      { name: 'Maden suyu',       cat: 'icecek', price: 8,  cost: 0,   dtags: ['soguk', 'gazli', 'hafif', 'ferah', 'ucuz'], drink: { style: 'bottle', c1: '#bfe3f2', c2: '#2f7fd0' } },
+  kola:      { name: 'Kola',             cat: 'icecek', price: 12, cost: 0,   dtags: ['soguk', 'gazli', 'tatli', 'modern', 'kafein'], drink: { style: 'can', c1: '#c0201a', c2: '#3a1a10' } },
+  limonata:  { name: 'Ev limonatası',    cat: 'icecek', price: 14, cost: 150, dtags: ['soguk', 'ferah', 'tatli'], drink: { style: 'tall', c1: '#f7e36a', c2: '#8ac84a' } },
+  salgam:    { name: 'Acılı şalgam',     cat: 'icecek', price: 10, cost: 150, dtags: ['soguk', 'nostaljik', 'cesur'], drink: { style: 'cup', c1: '#7a1a3a', c2: '#a8305a' } },
+  kahve:     { name: 'Türk kahvesi',     cat: 'icecek', price: 15, cost: 200, dtags: ['sicak', 'kafein', 'nostaljik'], drink: { style: 'mug', c1: '#4a2a14', c2: '#c9a26a' } },
+  seftali:   { name: 'Şeftalili soğuk çay', cat: 'icecek', price: 14, cost: 200, dtags: ['soguk', 'tatli', 'modern', 'ferah'], drink: { style: 'tall', c1: '#f0a050', c2: '#f7d0a0' } },
+  sogukKahve:{ name: 'Soğuk kahve',      cat: 'icecek', price: 18, cost: 250, dtags: ['soguk', 'kafein', 'modern'], drink: { style: 'tall', c1: '#a8744a', c2: '#f5ead8' } },
+  serbet:    { name: 'Kızılcık şerbeti', cat: 'icecek', price: 14, cost: 250, dtags: ['soguk', 'tatli', 'nostaljik', 'ferah'], drink: { style: 'cup', c1: '#d8203a', c2: '#f07080' } },
+  boza:      { name: 'Leblebili boza',   cat: 'icecek', price: 14, cost: 300, dtags: ['tatli', 'nostaljik', 'cesur', 'kis'], drink: { style: 'cup', c1: '#e8d09a', c2: '#c9a24a' } },
+  salep:     { name: 'Tarçınlı salep',   cat: 'icecek', price: 16, cost: 300, dtags: ['sicak', 'tatli', 'nostaljik', 'kis'], drink: { style: 'mug', c1: '#f3ead8', c2: '#a8642a' } },
+  smoothie:  { name: 'Meyveli smoothie', cat: 'icecek', price: 20, cost: 350, dtags: ['soguk', 'ferah', 'modern', 'hafif', 'cesur'], drink: { style: 'tall', c1: '#e8508a', c2: '#ffd0e0' } },
+});
+Object.values(ING).forEach(i => { i.tags = i.tags || []; i.dtags = i.dtags || []; });
 
 /* ---- Yardımcılar (sandviç özeti s = {bread, fills[], toasted, price}) ---- */
 const H = {
@@ -460,11 +528,11 @@ const H = {
  * check(s) → 0..2 puan. Müşteriler malzeme adı SÖYLEMEZ; ne istedikleri durumlarından anlaşılır.
  * guide: 3 yıldız aldığında "Ruh hâli rehberi"ne yazılan ipucu. */
 const MOODS = {
-  usumus: { emo: '🥶', label: 'Üşümüş', pat: 1, tip: 1, notWeather: ['sicak'],
+  usumus: { drink: { want: ['sicak'], avoid: ['soguk'], say: 'Yanına da içimi ısıtacak bir şey içerim.' }, emo: '🥶', label: 'Üşümüş', pat: 1, tip: 1, notWeather: ['sicak'],
     lines: ['Uludağ’dan rüzgâr esiyor, iliklerime kadar üşüdüm…', 'Ellerim buz kesti, içimi ısıtacak bir şey lazım.', 'Bu soğukta dişlerim takırdıyor…'],
     check: s => s.toasted ? 2 : (H.tag(s, 'eriyen') ? 1 : 0),
     react: ['Bu buz gibi…', 'İdare eder.', 'Oh be, içim ısındı!'], guide: 'Tost makinesinden geçsin.' },
-  bunalmis: { emo: '🥵', label: 'Bunalmış', pat: .9, tip: 1, onlyWeather: ['sicak', 'gunesli'],
+  bunalmis: { drink: { want: ['soguk'], avoid: ['sicak'], say: 'Yanına da buz gibi bir şey olsun!' }, emo: '🥵', label: 'Bunalmış', pat: .9, tip: 1, onlyWeather: ['sicak', 'gunesli'],
     lines: ['Bu sıcakta eriyorum… serin bir şey olsun, ateş görmesin.', 'Güneş tepemde, ferah ferah bir şey lazım.'],
     check: s => s.toasted ? 0 : (H.tag(s, 'ferah') >= 2 ? 2 : 1),
     react: ['Bu sıcakta tost mu?!', 'Fena değil ama biraz daha ferah olabilirdi.', 'Ohh, serinledim!'], guide: 'Tostlanmasın, en az iki taze sebze.' },
@@ -472,83 +540,83 @@ const MOODS = {
     lines: ['Çok acelem var, öyle uzun uzun uğraşma!', 'Otobüs kalkıyor, hızlı ve sade lütfen!', 'Beş dakikam var usta, yetişir mi?'],
     check: s => { const n = H.n(s); return n >= 1 && n <= 3 && !s.toasted ? 2 : (n <= 4 ? 1 : 0); },
     react: ['Bunu beklemeye vaktim yoktu!', 'Biraz uzun sürdü ama tamam.', 'Süper hızlı, sağ ol!'], guide: 'En fazla 3 malzeme, tost yok.' },
-  uzgun: { emo: '😢', label: 'Hüzünlü', pat: 1.2, tip: 1,
+  uzgun: { drink: { want: ['sicak','tatli'], avoid: [], say: 'Yanına da beni sarıp sarmalayacak bir şey…' }, emo: '😢', label: 'Hüzünlü', pat: 1.2, tip: 1,
     lines: ['Bugün hiçbir şey yolunda gitmedi… Beni teselli edecek bir şey.', 'Moralim yerlerde… insanın içini ısıtan, yumuşacık bir şey.'],
     check: s => Math.min(2, (H.tag(s, 'eriyen') ? 1 : 0) + (s.toasted ? 1 : 0) + (H.tag(s, 'tatli') ? 1 : 0)),
     react: ['Bu da moralimi düzeltmedi…', 'Biraz iyi geldi.', 'Ohh… dünya birden güzelleşti.'], guide: 'Sıcak + eriyen peynir ya da tatlı bir dokunuş.' },
-  kutlama: { emo: '🎉', label: 'Kutlamada', pat: 1, tip: 1.7,
+  kutlama: { drink: { want: ['gazli','tatli'], avoid: [], say: 'Yanına da köpük köpük bir şey, kutlama bu!' }, emo: '🎉', label: 'Kutlamada', pat: 1, tip: 1.7,
     lines: ['Bugün terfi aldım! Ne varsa koy, en lüksünden!', 'Müjde! Büyük haber aldım, cömert ol usta!'],
     check: s => (H.n(s) >= 5 ? 1 : 0) + (H.tag(s, 'lux') ? 1 : 0),
     react: ['Kutlama bu mu yani?', 'Fena değil!', 'İşte kutlamaya yakışır! 🎉'], guide: 'En az 5 malzeme ve lüks bir şey (rozbif, biftek, pastırma, avokado).' },
-  ac: { emo: '🍖', label: 'Kurt gibi aç', pat: 1, tip: 1,
+  ac: { drink: { want: ['ayran'], avoid: [], say: 'Yanına da bu işin olmazsa olmazı, köpüklü beyaz olanından!' }, emo: '🍖', label: 'Kurt gibi aç', pat: 1, tip: 1,
     lines: ['Sabahtan beri ağzıma lokma koymadım!', 'Karnım zil çalıyor, doyurucu olsun!', 'Öyle açım ki masayı yiyeceğim…'],
     check: s => Math.min(2, H.tag(s, 'protein')),
     react: ['Bu beni doyurmaz ki…', 'Biraz daha olsa…', 'Oh, doydum be!'], guide: 'En az iki protein.' },
-  hafif: { emo: '🌿', label: 'Hafif takılıyor', pat: 1, tip: 1,
+  hafif: { drink: { want: ['hafif'], avoid: ['tatli'], say: 'Yanına da hafif, şekersiz bir şey.' }, emo: '🌿', label: 'Hafif takılıyor', pat: 1, tip: 1,
     lines: ['Bugün hafif takılıyorum, mideyi yormayalım.', 'Akşam düğüne gideceğim, ağır bir şey olmasın.'],
     check: s => H.tag(s, 'agir') ? 0 : (H.tag(s, 'ferah') >= 2 ? 2 : 1),
     react: ['Çok ağır oldu bu…', 'Hafif ama biraz sade.', 'Tam istediğim gibi, hafif ve taze!'], guide: 'Ağır et yok, en az iki taze sebze.' },
-  uykulu: { emo: '😴', label: 'Uykulu', pat: 1, tip: 1,
+  uykulu: { drink: { want: ['kafein'], avoid: [], say: 'Yanına da gözümü açacak bir şey lazım!' }, emo: '😴', label: 'Uykulu', pat: 1, tip: 1,
     lines: ['Gözlerim kapanıyor… beni silkeleyecek bir şey!', 'Sabahladım… ağzımı yakan, yüzümü buruşturan bir şey lazım!'],
     check: s => (H.tag(s, 'aci') ? 1 : 0) + (H.tag(s, 'eksi') ? 1 : 0),
     react: ['Zzz… bu beni daha çok uyuttu.', 'Biraz açıldım.', 'Uyandım! Gözlerim fal taşı! 🔥'], guide: 'Hem acı hem ekşi.' },
-  nostaljik: { emo: '🕰️', label: 'Nostaljik', pat: 1.3, tip: 1.1,
+  nostaljik: { drink: { want: ['nostaljik'], avoid: ['modern'], say: 'Yanına da eskilerden bir tat, ne güzel olur.' }, emo: '🕰️', label: 'Nostaljik', pat: 1.3, tip: 1.1,
     lines: ['Çocukluğumdaki gibi bir şey… mahalle fırınından, sade, annemin yaptığı gibi.', 'Eskiden okul beslenme çantama ne konurdu, hatırlar mısın? Öyle bir şey.'],
     check: s => { const p = (['somun', 'simit'].includes(s.bread) ? 1 : 0) + (H.has(s, 'beyaz') ? 1 : 0) + (H.has(s, 'domates') ? 1 : 0); return p === 3 ? 2 : (p === 2 ? 1 : 0); },
     react: ['Hiç benzemedi…', 'Biraz andırıyor…', 'Tıpkı çocukluğumdaki gibi! 🥲'], guide: 'Somun ya da simit + beyaz peynir + domates.' },
-  randevu: { emo: '🌹', label: 'İlk buluşma', pat: 1, tip: 1.4,
+  randevu: { drink: { want: ['ferah'], avoid: ['kafein'], say: 'Yanına da ferahlatan bir şey, heyecandan ağzım kurudu.' }, emo: '🌹', label: 'İlk buluşma', pat: 1, tip: 1.4,
     lines: ['Birazdan ilk buluşmama gidiyorum… nefesim mis gibi kalmalı!', 'Bugün onunla ilk kez yemeğe çıkıyoruz, mahcup olmayayım!'],
     check: s => H.tag(s, 'koku') ? 0 : (H.n(s) >= 3 ? 2 : 1),
     react: ['Bu kokuyla nasıl buluşmaya giderim?!', 'Güzel ama biraz sade.', 'Mis gibi! Şansım açık olsun 🌹'], guide: 'Soğan, sarımsak, pastırma yok; en az 3 malzeme.' },
-  asik: { emo: '💕', label: 'Âşık', pat: 1, tip: 1.4,
+  asik: { drink: { want: ['tatli'], avoid: [], say: 'Yanına da tatlı bir şey, hayatım şeker olsun!' }, emo: '💕', label: 'Âşık', pat: 1, tip: 1.4,
     lines: ['Kalbim pır pır… bana tatlı mı tatlı bir şey yap.', 'Bugün ona açılacağım, hayatım şekerli olsun!'],
     check: s => H.tag(s, 'tatli') ? (H.n(s) >= 3 ? 2 : 1) : 0,
     react: ['Bu hiç romantik değil…', 'Tatlı, ama biraz daha özen olabilirdi.', 'Kalbim pır pır! 💕'], guide: 'Tatlı bir şey ve en az 3 malzeme.' },
-  mac: { emo: '⚽', label: 'Maç günü', pat: 1, tip: 1.2,
+  mac: { drink: { want: ['gazli'], avoid: [], say: 'Yanına da gazlı bir şey, tribünde bağırmak için!' }, emo: '⚽', label: 'Maç günü', pat: 1, tip: 1.2,
     lines: ['Akşam Bursaspor maçı var! Timsah gibi doyurucu ve ateşli bir şey!', 'Tribüne gidiyorum, gaz lazım usta!'],
     check: s => (H.tag(s, 'aci') ? 1 : 0) + (H.tag(s, 'agir') ? 1 : 0),
     react: ['Bununla tribünde bayılırım…', 'Fena değil, yarısı oldu.', 'Haydi Bursa! Gol gibi sandviç! ⚽'], guide: 'Acı bir şey + ağır bir et.' },
-  antrenman: { emo: '💪', label: 'Antrenman sonrası', pat: 1, tip: 1,
+  antrenman: { drink: { want: ['hafif'], avoid: ['tatli'], say: 'Yanına da şekersiz bir şey, emeğime yazık olmasın.' }, emo: '💪', label: 'Antrenman sonrası', pat: 1, tip: 1,
     lines: ['Spordan geliyorum, kaslarım bayram etsin!', 'Bugün 10 kilometre koştum, yağsız ama dolu bir şey!'],
     check: s => H.tag(s, 'protein') >= 2 && !H.tag(s, 'kremali') ? 2 : (H.tag(s, 'protein') ? 1 : 0),
     react: ['Kaslarım ağlıyor…', 'Biraz daha protein olabilirdi.', 'Kaslarım teşekkür ediyor! 💪'], guide: 'İki protein, kremalı sos yok.' },
-  hasta: { emo: '🤧', label: 'Soğuk algınlığı', pat: 1.1, tip: 1,
+  hasta: { drink: { want: ['sicak'], avoid: ['soguk','gazli'], say: 'Yanına da boğazıma iyi gelecek sıcacık bir şey.' }, emo: '🤧', label: 'Soğuk algınlığı', pat: 1.1, tip: 1,
     lines: ['Hapşu! Boğazım yanıyor… yumuşak ve sıcak bir şey olsun.', 'Grip oldum galiba… boğazımı tahriş etmeyen, sıcacık bir şey.'],
     check: s => s.toasted ? (!H.tag(s, 'aci') && !H.tag(s, 'eksi') ? 2 : 1) : 0,
     react: ['Hapşu… bu iyi gelmedi.', 'Biraz rahatladım.', 'Ilık ılık, şifa gibi geldi 🤧'], guide: 'Sıcak, acı ve ekşi yok.' },
-  piknik: { emo: '🧺', label: 'Pikniğe gidiyor', pat: 1, tip: 1.1, notWeather: ['karli', 'yagmurlu'],
+  piknik: { drink: { want: ['soguk'], avoid: ['sicak'], say: 'Yanına da çimende içilecek serin bir şey.' }, emo: '🧺', label: 'Pikniğe gidiyor', pat: 1, tip: 1.1, notWeather: ['karli', 'yagmurlu'],
     lines: ['Botanik Park’a pikniğe gidiyoruz! Yolda bozulmayacak, soğuk yenecek bir şey.', 'Uludağ yolunda piknik yapacağız, güneşe dayanıklı olsun.'],
     check: s => (!s.toasted && !H.tag(s, 'kremali')) ? (H.n(s) >= 3 ? 2 : 1) : 0,
     react: ['Bu yolda bozulur…', 'Olur, idare eder.', 'Piknik sepetinin yıldızı bu! 🧺'], guide: 'Tost yok, kremalı sos yok, en az 3 malzeme.' },
-  aysonu: { emo: '🪙', label: 'Ay sonu', pat: 1, tip: .6,
+  aysonu: { drink: { want: ['ucuz'], avoid: [], say: 'Yanına da bütçemi sarsmayacak bir şey.' }, emo: '🪙', label: 'Ay sonu', pat: 1, tip: .6,
     lines: ['Ay sonu geldi, cepte son bozukluklar… idareli olsun usta.', 'Maaş yarın yatacak, bugün cebimi yakmayalım.'],
     check: s => s.price <= 45 ? 2 : (s.price <= 60 ? 1 : 0),
     react: ['Bunu nasıl ödeyeceğim?!', 'Biraz pahalı ama olsun.', 'Hem lezzetli hem uygun, eyvallah!'], guide: 'Fiyat ₺45 ve altı.' },
-  kahvalti: { emo: '☀️', label: 'Kahvaltı modu', pat: 1, tip: 1, before: 690,
+  kahvalti: { drink: { want: ['kahvalti'], avoid: [], say: 'Yanına da kahvaltının vazgeçilmezi!' }, emo: '☀️', label: 'Kahvaltı modu', pat: 1, tip: 1, before: 690,
     lines: ['Kahvaltı yapmadan çıktım, güne güzel başlamak lazım!', 'Sabah sabah kahvaltı sofrası tadında bir şey olsa…'],
     check: s => { const p = H.tag(s, 'kahvalti') + (s.bread === 'simit' ? 1 : 0); return p >= 3 ? 2 : (p >= 2 ? 1 : 0); },
     react: ['Bu kahvaltılık değil ki…', 'Fena değil.', 'Tam bir Bursa kahvaltısı! ☀️'], guide: 'Simit ya da kahvaltılıklar (peynir, zeytin, yumurta, bal, kaymak…).' },
-  gece: { emo: '🌙', label: 'Gece vardiyası', pat: 1, tip: 1.2, after: 1000,
+  gece: { drink: { want: ['kafein'], avoid: [], say: 'Yanına da beni sabaha çıkaracak bir şey.' }, emo: '🌙', label: 'Gece vardiyası', pat: 1, tip: 1.2, after: 1000,
     lines: ['Sabaha kadar nöbetteyim, beni ayakta tutacak bir şey.', 'Gece mesaisine giriyorum, uzun bir gece olacak…'],
     check: s => (s.toasted ? 1 : 0) + (H.tag(s, 'protein') >= 2 ? 1 : 0),
     react: ['Bu gece zor geçecek…', 'İdare eder.', 'Sabaha kadar dayanırım artık! 🌙'], guide: 'Sıcak ve en az iki protein.' },
-  maceraci: { emo: '🧭', label: 'Maceraperest', pat: 1, tip: 1.3,
+  maceraci: { drink: { want: ['cesur'], avoid: [], say: 'Yanına da daha önce hiç içmediğim değişik bir şey!' }, emo: '🧭', label: 'Maceraperest', pat: 1, tip: 1.3,
     lines: ['Bana daha önce hiç yemediğim bir şey yap, şaşırt beni!', 'Sıradan şeylerden sıkıldım, cesur ol usta!'],
     check: s => H.cats(s) >= 4 ? 2 : (H.cats(s) === 3 ? 1 : 0),
     react: ['Sıradan…', 'İlginç!', 'Vay be! Hiç böyle bir şey yememiştim 🧭'], guide: 'En az 4 farklı kategoriden malzeme.' },
-  diyet: { emo: '🥗', label: 'Diyette', pat: 1, tip: 1,
+  diyet: { drink: { want: ['hafif'], avoid: ['tatli'], say: 'Yanına da kalorisiz bir şey.' }, emo: '🥗', label: 'Diyette', pat: 1, tip: 1,
     lines: ['Diyetteyim, diyetisyenim beni izliyor…', 'Bu hafta kendime iyi bakıyorum, sağlıklı olsun.'],
     check: s => (H.tag(s, 'kremali') || H.tag(s, 'tatli') || H.tag(s, 'agir')) ? 0 : ((['kepekli', 'lavas'].includes(s.bread) || H.tag(s, 'ferah') >= 2) ? 2 : 1),
     react: ['Diyetim bitti…', 'Fena değil.', 'Diyetisyenim gurur duyar! 🥗'], guide: 'Kremalı/tatlı/ağır yok; tam buğday, lavaş ya da bol sebze.' },
-  cocuksu: { emo: '🎈', label: 'Şımarık', pat: .9, tip: 1, kidOnly: true,
+  cocuksu: { drink: { want: ['tatli'], avoid: ['kafein'], say: 'Yanına da tatlı bir şey içmek istiyoruum!' }, emo: '🎈', label: 'Şımarık', pat: .9, tip: 1, kidOnly: true,
     lines: ['Tatlı bir şey istiyoruuum!', 'Annem tatlı yok dedi ama sen söylemezsin di mi?'],
     check: s => H.tag(s, 'tatli') ? (H.n(s) >= 2 ? 2 : 1) : 0,
     react: ['Hıı… bu tatlı değil!', 'Fena değil!', 'Yaşasın! 🎈'], guide: 'Tatlı bir şey.' },
-  yagmur: { emo: '☔', label: 'Sırılsıklam', pat: 1.1, tip: 1.1, onlyWeather: ['yagmurlu'],
+  yagmur: { drink: { want: ['sicak'], avoid: ['soguk'], say: 'Yanına da sıcacık bir şey, ellerim dondu.' }, emo: '☔', label: 'Sırılsıklam', pat: 1.1, tip: 1.1, onlyWeather: ['yagmurlu'],
     lines: ['Yağmura yakalandım, iliklerime kadar ıslandım!', 'Şemsiyem uçtu gitti… beni kendime getir usta.'],
     check: s => Math.min(2, (s.toasted ? 1 : 0) + (H.tag(s, 'eriyen') ? 1 : 0)),
     react: ['Hâlâ titriyorum…', 'Biraz ısındım.', 'Kurudum sanki! ☔'], guide: 'Sıcak + eriyen peynir.' },
-  gizemli: { emo: '🕶️', label: 'Gizemli', pat: 1, tip: 1, special: true,
+  gizemli: { drink: { want: ['nostaljik'], avoid: [], say: 'Yanına da bu şehrin eski bir tadını.' }, emo: '🕶️', label: 'Gizemli', pat: 1, tip: 1, special: true,
     lines: ['Şefin önerisi neyse… Bu dükkânı tanımak istiyorum.', 'Bana bu dükkânı en iyi anlatan sandviçi yapın.'],
     check: s => (H.cats(s) >= 4 ? 1 : 0) + ((s.toasted || H.tag(s, 'lux')) ? 1 : 0),
     react: ['İlginç… çok sade.', 'Hmm… not aldım.', 'Etkileyici.'], guide: '4 kategori + sıcak ya da lüks.' },
@@ -667,6 +735,7 @@ const EQUIP = {
   cay:     { name: 'Çay ocağı',           emo: '🫖', cost: 350, desc: 'Sıradakilere çay ikram edilir: sabır +%30.' },
   tezgah:  { name: 'Geniş tezgâh',        emo: '🪵', cost: 300, desc: 'Bir sandviçe 6 yerine 9 malzeme koyabilirsin.' },
   masa:    { name: 'Dördüncü masa',       emo: '🪑', cost: 450, desc: 'İki oturma yeri daha; oturup yiyenler +₺4 bahşiş bırakır.' },
+  dolap:   { name: 'İçecek dolabı',       emo: '🧊', cost: 300, desc: 'Meşrubat satmaya başla! Ayran, çay, gazoz, maden suyu ve kola gelir; diğerleri Malzemeler’den açılır. Uygun içecek bahşişi artırır.' },
   pano:    { name: 'Işıklı menü panosu',  emo: '💡', cost: 500, desc: 'Menüden sipariş verenler artar, menü fiyatları +%15.' },
 };
 const DECOR = {
@@ -844,7 +913,8 @@ function drawShop(st) {
   P(48, 24, 224, 88, '#ecd9b2'); P(48, 24, 224, 2, '#c9ad7f');
   for (let y = 28; y < 110; y += 8) for (let x = 50 + ((y / 8) % 2) * 6; x < 270; x += 12) P(x, y, 1, 1, '#dcc596');
   P(78, 26, 164, 13, '#1f4f7a'); P(78, 26, 164, 1, '#3f7fb0'); P(78, 38, 164, 1, '#123050'); P(80, 28, 160, 9, '#245a8a');
-  txt('UMUT SANDVİÇ EVİ', 160, 32.6, 9, '#ffd35c', 'px'); txt('♥', 88, 32.6, 9, '#ff7a6a', 'px'); txt('♥', 232, 32.6, 9, '#ff7a6a', 'px');
+  { const nm = st.shopName || 'UMUT SANDVİÇ EVİ'; let fs = 9; g.font = `${fs}px "Pixelify Sans"`; while (fs > 4.5 && g.measureText(nm).width > 132) { fs -= .5; g.font = `${fs}px "Pixelify Sans"`; }
+    txt(nm, 160, 32.6, fs, '#ffd35c', 'px'); } txt('♥', 88, 32.6, 9, '#ff7a6a', 'px'); txt('♥', 232, 32.6, 9, '#ff7a6a', 'px');
   P(52, 30, 22, 6, '#1f4fa0'); P(52, 30, 22, 1, '#fff'); P(52, 35, 22, 1, '#fff'); txt('Ulucami Cd.', 63, 33.1, 3.5, '#fff');
   // iç mekân
   P(76, 48, 168, 48, lerpC('#f4d9a8', '#f7cf8a', nightK(m))); P(76, 80, 168, 16, '#d7e3e0');
@@ -900,6 +970,7 @@ function drawShop(st) {
   if (D.has('neon')) { const on = m > 1000 || Math.floor(performance.now() / 700) % 2; const c = on ? '#ff5ab4' : '#a04a7a';
     P(247, 54, 22, 9, '#2a1d2a'); txt('UMUT', 258, 58.8, 6, c, 'px');
     if (on && m > 1000) { g.globalCompositeOperation = 'lighter'; P(246, 53, 24, 11, 'rgba(255,90,180,.18)'); g.globalCompositeOperation = 'source-over'; } }
+  if (E.has('dolap')) drawFridge();
   // begonvil
   if (D.has('saksi')) { [[50, 74], [246, 272]].forEach(([a, b]) => { for (let x = a; x < b; x += 3) { const y = 40 + ((x * 7) % 9); P(x, y, 2, 2, '#e04a9a'); P(x + 1, y + 3, 1, 3, '#4f9a46'); } }); }
   P(74, 48, 2, 48, '#7a5232'); P(244, 48, 2, 48, '#7a5232');
@@ -946,7 +1017,7 @@ function drawTablesFront(tables, seats) {
   tables.forEach(t => {
     P(t - 9, 149, 18, 3, '#d9a066'); P(t - 9, 151, 18, 1, '#a87444'); P(t - 1, 152, 2, 12, '#6b4a33'); P(t - 4, 164, 8, 1, '#6b4a33');
     seats.filter(s => s.t === t && s.occ && s.occ.state === 'eat').forEach(s => { const side = s.x < t ? -1 : 1, fx = t + side * 5;
-      P(fx - 2, 147, 5, 2, '#e0a35a'); P(fx - 2, 146, 5, 1, '#f7c93b'); P(t - side - 1, 145, 2, 4, '#c0392b'); P(t - side - 1, 145, 2, 1, '#f5f5f5'); });
+      P(fx - 2, 147, 5, 2, '#e0a35a'); P(fx - 2, 146, 5, 1, '#f7c93b'); const dc = s.occ.drink && ING[s.occ.drink] ? ING[s.occ.drink].drink.c1 : '#c0392b'; P(t - side - 1, 145, 2, 4, dc); P(t - side - 1, 145, 2, 1, '#f5f5f5'); });
   });
 }
 
@@ -974,11 +1045,32 @@ function bubble(x, y, text, bg = '#fff') {
   g.fillStyle = '#2a1d17'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, x, by + 4.8);
 }
 
+// ---------- içecekler ----------
+function drawDrink(R, x, y, d) { // (x, y): sol-alt köşe
+  const glass = '#dfeff5', c1 = d.c1, c2 = d.c2;
+  switch (d.style) {
+    case 'cup': R(x, y - 10, 7, 10, glass); R(x + 1, y - 8, 5, 7, c1); R(x + 1, y - 9, 5, 1, c2); R(x, y - 1, 7, 1, '#b8ccd6'); break;
+    case 'tulip': R(x - 1, y - 1, 9, 1, '#e8e8e8'); R(x + 1, y - 10, 5, 3, c1); R(x + 2, y - 7, 3, 2, c1); R(x + 1, y - 5, 5, 4, c1); R(x + 1, y - 10, 5, 1, c2); R(x + 1, y - 9, 1, 2, '#f8d8c0'); break;
+    case 'bottle': R(x + 2, y - 14, 3, 1, '#c0c0c0'); R(x + 2, y - 13, 3, 3, c1); R(x + 1, y - 10, 5, 10, c1); R(x + 1, y - 6, 5, 2, c2); R(x + 2, y - 9, 1, 3, 'rgba(255,255,255,.6)'); break;
+    case 'can': R(x, y - 10, 6, 10, c1); R(x, y - 10, 6, 1, '#d0d0d0'); R(x, y - 6, 6, 2, c2); R(x + 1, y - 9, 1, 3, 'rgba(255,255,255,.5)'); break;
+    case 'tall': R(x, y - 12, 7, 12, glass); R(x + 1, y - 10, 5, 9, c1); R(x + 1, y - 11, 5, 1, c2); R(x + 5, y - 15, 1, 5, '#e8432f'); R(x + 5, y - 15, 2, 1, '#e8432f'); break;
+    case 'mug': R(x - 1, y - 1, 10, 1, '#e0e0e0'); R(x, y - 7, 7, 6, '#fafafa'); R(x + 1, y - 7, 5, 1, c1); R(x + 2, y - 7, 2, 1, c2); R(x + 7, y - 6, 1, 3, '#fafafa'); R(x, y - 3, 7, 1, '#2f7fd0'); break;
+  }
+}
+function drawFridge() {
+  P(247, 66, 24, 45, '#e8eef2'); P(247, 66, 24, 5, '#2f7fd0'); txt('SOĞUK', 259, 68.8, 3.5, '#ffffff');
+  P(249, 72, 20, 36, '#9fd0e8'); P(249, 72, 1, 36, '#c8e6f2');
+  [[80, ['#f2a23a', '#c0201a', '#bfe3f2', '#fbfbf5', '#f7e36a']], [90, ['#d8203a', '#a8744a', '#e8508a', '#f2a23a', '#c0201a']], [100, ['#fbfbf5', '#bfe3f2', '#7a1a3a', '#f7e36a', '#fbfbf5']]].forEach(([y, cs]) => {
+    cs.forEach((c, i) => { P(250 + i * 4, y - 6, 3, 6, c); P(251 + i * 4, y - 7, 1, 1, '#c0c0c0'); }); P(249, y, 20, 1, '#7aa8c0'); });
+  P(267, 84, 1, 8, '#8a9aa6'); P(247, 108, 24, 3, '#b8c4cc');
+}
+
 // ---------- malzeme ikonları ----------
 function icon(id) {
   const c = document.createElement('canvas'); c.width = 32; c.height = 32; const x = c.getContext('2d'); x.scale(2, 2);
   const R = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
   const it = ING[id];
+  if (it.drink) { drawDrink(R, 4, 15, it.drink); return c; }
   if (it.bread) {
     const b = it.bread;
     switch (b.style) {
@@ -1040,6 +1132,7 @@ function drawStack(cv, sw, scale) {
   if (b.style === 'herb') { dots([[-20, 2], [-6, 1], [8, 2], [20, 1]], '#4f9a46', 1); dots([[-14, 1], [2, 2], [14, 2]], '#f7c93b'); }
   if (b.style === 'baget') for (let x = cx - w / 2 + 8; x < cx + w / 2 - 8; x += 12) { SP(x, top + 1, 5, 1, darken(b.crust, .7)); SP(x + 4, top, 3, 1, b.inner); }
   if (sw.toasted) for (let x = cx - w / 2 + 6; x < cx + w / 2 - 4; x += 8) SP(x, top + 1, 2, Math.max(1, th - 2), 'rgba(70,30,10,.5)');
+  if (sw.drink) { SP(102, 60, 14, 1, 'rgba(0,0,0,.15)'); drawDrink(SP, 105, 60, ING[sw.drink].drink); }
   return top;
 }
 function layer(SP, f, cx, y, w, toasted, idx) {
@@ -1065,7 +1158,7 @@ function layer(SP, f, cx, y, w, toasted, idx) {
 window.Art = {
   setCtx: ctx => { g = ctx; }, P, txt, W, H, darken, lerpC, nightK,
   drawPerson, drawCat, drawBackground, drawShop, drawCounterFront, drawGround, drawTablesBack, drawTablesFront,
-  drawWeather, drawNight, drawBreakSign, bubble, icon, drawStack,
+  drawWeather, drawNight, drawBreakSign, bubble, drawDrink, icon, drawStack,
 };
 })();
 
@@ -1178,7 +1271,7 @@ function newProfile() {
     stats: { served: 0, stars3: 0, pets: 0, earned: 0 }, savedAt: 0 };
 }
 let P = newProfile();
-const unl = () => new Set(P.unlocked);
+const unl = () => new Set([...P.unlocked, ...Object.keys(ING).filter(k => ING[k].cost === 0)]);
 const WEEK = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 const weekday = () => WEEK[(P.day - 1) % 7];
 
@@ -1212,10 +1305,13 @@ const has = (k, set) => P[set].includes(k);
 
 // ================= SANDVİÇ HESAPLARI =================
 function sandwichSummary() {
-  const sw = S.sw; const s = { bread: sw.bread, fills: sw.fills.slice(), toasted: sw.toasted };
-  s.price = (sw.bread ? ING[sw.bread].price : 0) + sw.fills.reduce((t, f) => t + ING[f].price, 0) + (sw.toasted ? 5 : 0) + 15;
+  const sw = S.sw; const s = { bread: sw.bread, fills: sw.fills.slice(), toasted: sw.toasted, drink: sw.drink || null };
+  s.food = (sw.bread ? ING[sw.bread].price : 0) + sw.fills.reduce((t, f) => t + ING[f].price, 0) + (sw.toasted ? 5 : 0) + 15;
+  s.price = s.food + (s.drink ? ING[s.drink].price : 0);
   return s;
 }
+// İlk iki hafta sakin: gün daha yavaş akar, müşteriler daha sabırlıdır. 3. haftadan itibaren normal tempo.
+function pace() { const d = P.day; return d <= 7 ? { min: 2.4, pat: 1.7, wk: 1 } : d <= 14 ? { min: 3.2, pat: 1.3, wk: 2 } : { min: 4, pat: 1, wk: 3 }; }
 const maxFills = () => has('tezgah', 'equip') ? 9 : 6;
 const toastTime = () => has('turbo', 'equip') ? .8 : 1.6;
 
@@ -1284,14 +1380,45 @@ function spawn() {
     if (b.visits === 1 && ch.quirk && Math.random() < .35) hint += ' ' + ch.quirk;
     else if (b.visits > 2 && Math.random() < .3) hint += ' ' + pick(['Beni artık tanıyorsun 😉', 'Her zamanki özeni bekliyorum!', 'Geçen sefer güzeldi bu arada.']);
   }
+  if (has('dolap', 'equip')) {
+    const u = unl();
+    if (order.kind === 'mood' && MOODS[order.mood].drink && Math.random() < .35) { order.drinkReq = true; hint += ' ' + MOODS[order.mood].drink.say; }
+    else if (order.kind === 'menu' && Math.random() < .3) { const ds = Object.keys(ING).filter(k => ING[k].cat === 'icecek' && u.has(k)); if (ds.length) { order.drinkId = pick(ds); hint += ` Yanına da bir ${ING[order.drinkId].name.toLowerCase()}!`; } }
+  }
   const moodPat = order.kind === 'mood' ? MOODS[order.mood].pat : 1;
-  const pat = ch.base * moodPat * (has('cay', 'equip') ? 1.3 : 1) * (has('pikap', 'decor') ? 1.1 : 1);
+  const pat = ch.base * moodPat * pace().pat * (has('cay', 'equip') ? 1.3 : 1) * (has('pikap', 'decor') ? 1.1 : 1);
   S.customers.push({ id: ++S.uid, cid, ch, order, look: ch.look, x: 332, y: LANE, state: 'queue', arrived: false,
     hint, patience: pat, maxP: pat, frame: 0, wt: 0, moving: false, path: null, bubble: null, eat: 0 });
 }
 
 // ================= DEĞERLENDİRME =================
+function evalDrink(c, s) {
+  const d = s.drink ? ING[s.drink] : null, o = c.order;
+  if (o.kind === 'menu') {
+    if (o.drinkId) return s.drink === o.drinkId ? { delta: 0, tip: 5, line: 'İçeceği de tam istediğim gibi!' } : { delta: -1, tip: 0, line: `${ING[o.drinkId].name} da istemiştim ama…` };
+    return { delta: 0, tip: d ? 3 : 0, line: '' };
+  }
+  const Wd = MOODS[o.mood].drink;
+  if (!Wd) return { delta: 0, tip: d ? 2 : 0, line: '' };
+  const ok = d && Wd.want.some(t => d.dtags.includes(t)) && !Wd.avoid.some(t => d.dtags.includes(t));
+  const bad = d && Wd.avoid.some(t => d.dtags.includes(t));
+  if (o.drinkReq) {
+    if (ok) return { delta: 0, tip: 8, line: `${d.name} tam istediğim gibiydi!` };
+    if (d) return { delta: -1, tip: 0, line: bad ? `Ama ${d.name.toLowerCase()} bu hâlde hiç olmadı.` : 'İçecek pek istediğim gibi değildi.' };
+    return { delta: -1, tip: 0, line: 'İçecek de istemiştim ama…' };
+  }
+  if (ok) return { delta: 1, tip: 6, line: `Yanında ${d.name.toLowerCase()} olması da çok iyiydi!` };
+  if (bad) return { delta: 0, tip: 0, line: `${d.name} bu hâlde pek iyi gelmedi.` };
+  return { delta: 0, tip: d ? 2 : 0, line: '' };
+}
 function evaluate(c, s) {
+  const r = evaluateFood(c, s);
+  if (!s.fills.length) return r;
+  const dk = evalDrink(c, s);
+  if (!(c.ch.critic && r.stars === 3)) { r.stars = Math.max(0, Math.min(3, r.stars + dk.delta)); if (dk.line) r.line += ' ' + dk.line; }
+  r.drinkTip = dk.tip; return r;
+}
+function evaluateFood(c, s) {
   const ch = c.ch, o = c.order;
   const inS = i => s.fills.includes(i) || s.bread === i;
   if (!s.fills.length) return { stars: 0, line: 'Bu… sadece ekmek mi?', liked: [], disliked: [], pts: 0 };
@@ -1330,17 +1457,19 @@ function serve() {
   if (!S.sw.bread || S.sw.toasting > 0) return;
   const s = sandwichSummary(), r = evaluate(c, s);
   let price = s.price;
-  if (r.menu) price = Math.round((c.order.recipe.price || s.price) * (has('pano', 'equip') ? 1.15 : 1));
+  if (r.menu) price = Math.round((c.order.recipe.price || s.food) * (has('pano', 'equip') ? 1.15 : 1)) + (s.drink ? ING[s.drink].price : 0);
   const moodTip = c.order.kind === 'mood' ? MOODS[c.order.mood].tip : 1;
   let tip = Math.round((r.stars === 3 ? 12 : r.stars === 2 ? 4 : 0) * moodTip * (has('karagoz', 'decor') ? 1.05 : 1));
   if (c.ch.critic && r.stars === 3) tip += 40;
+  if (r.stars > 0) tip += r.drinkTip || 0;
+  c.drink = s.drink;
   const earned = r.stars > 0 ? price + tip : 0;
   P.money += earned; P.stats.earned += earned; S.day.money += earned; S.day.served++; S.day.stars += r.stars; P.stats.served++;
   if (r.stars === 3) P.stats.stars3++;
   P.rep = Math.max(1, Math.min(5, P.rep + (r.stars - 1.5) * .08 + (c.ch.critic && r.stars === 3 ? .5 : 0) - (c.ch.critic && r.stars < 2 ? .3 : 0)));
   if (!S.day.best || r.stars > S.day.best.stars) S.day.best = { stars: r.stars, name: c.ch.name, line: r.line };
   // defter
-  const b = P.book[c.cid]; const learned = [];
+  const b = P.book[c.cid] || (P.book[c.cid] = { visits: 1, likes: [], dislikes: [] }); const learned = [];
   r.liked.forEach(i => { if (!b.likes.includes(i)) { b.likes.push(i); learned.push('❤ ' + ING[i].name); } });
   r.disliked.forEach(i => { if (!b.dislikes.includes(i)) { b.dislikes.push(i); learned.push('✖ ' + ING[i].name); } });
   if (learned.length) { S.day.learned += learned.length; setTimeout(() => toast(`📒 Deftere yazıldı: ${short(c.ch.name)} → ${learned.join(', ')}`, 2600), 900); }
@@ -1356,12 +1485,13 @@ function serve() {
   if (earned) { particle(c.x, c.y - 26, '+₺' + earned); sfx.coin(); } else sfx.bad();
   if (r.stars === 3) setTimeout(() => particle(c.x + 8, c.y - 22, '❤', '#ff6b81'), 250);
   $('reaction').innerHTML = `<b>${'★'.repeat(r.stars)}${'☆'.repeat(3 - r.stars)}</b> ${short(c.ch.name)}: “${r.line}”<br><span style="color:#3f8f6a">${earned ? `+₺${price}${tip ? ` (+₺${tip} bahşiş)` : ''}` : 'Ödeme yok…'}</span>`;
+  { const re = $('reaction'); re.classList.remove('flash'); void re.offsetWidth; re.classList.add('flash'); }
   const free = S.seats.filter(s2 => !s2.occ);
   if (free.length && r.stars > 0) { const st = pick(free); st.occ = c; c.seat = st; c.state = 'toSeat'; c.path = [{ x: c.x, y: LANE }, { x: st.x, y: LANE }, { x: st.x, y: st.y }];
     if (has('masa', 'equip')) { P.money += 4; S.day.money += 4; } }
   else leave(c, null);
-  S.sw = { bread: null, fills: [], toasted: false, toasting: 0 }; refreshBoard();
-  closeKitchen();
+  S.sw = { bread: null, fills: [], toasted: false, toasting: 0, drink: null }; refreshBoard();
+  closeKitchen(); if (TUT.active) tutEvent('served', r);
 }
 
 // ================= HAREKET =================
@@ -1405,15 +1535,15 @@ function update(dt) {
   updateCat(dt);
   S.particles.forEach(p => p.t += dt); S.particles = S.particles.filter(p => p.t < p.life);
   S.customers.forEach(c => { if (c.bubble) c.bubble.t -= dt; });
-  if (S.sw.toasting > 0) { S.sw.toasting -= dt; if (S.sw.toasting <= 0) { S.sw.toasting = 0; S.sw.toasted = true; sfx.bell(); refreshBoard(); } }
+  if (S.sw.toasting > 0) { S.sw.toasting -= dt; if (S.sw.toasting <= 0) { S.sw.toasting = 0; S.sw.toasted = true; sfx.bell(); refreshBoard(); if (TUT.active) tutEvent('toasted'); } }
   if (!S.running) return;
   const sp = S.closing ? Math.max(S.speed, 4) : (S.brk ? (S.speed === 0 ? 0 : 8) : S.speed), gdt = dt * sp;
   if (S.brk && S.minutes >= S.brk.until) endBreak();
   if (!S.brk && !S.fridayHint && weekday() === 'Cuma' && S.minutes > 735 && S.minutes < 790) { S.fridayHint = true; toast('🕌 Cuma vakti! İstersen “Mola ver” ile kapıya not asabilirsin.', 3500); }
   if (!S.closing) {
-    S.minutes = Math.min(CLOSE, S.minutes + gdt * MIN_PER_SEC);
+    if (!TUT.active) S.minutes = Math.min(CLOSE, S.minutes + gdt * pace().min);
     const q = queueList();
-    if (!S.brk && S.minutes >= S.nextSpawn && S.minutes < LAST_SPAWN) {
+    if (!TUT.active && !S.brk && S.minutes >= S.nextSpawn && S.minutes < LAST_SPAWN) {
       if (q.length < 3) { spawn(); let gap = rnd(26, 46) * (1.24 - P.rep * .08); if (has('neon', 'decor') && S.minutes > 1020) gap *= .8; S.nextSpawn = S.minutes + gap; }
       else S.nextSpawn = S.minutes + 8;
     }
@@ -1424,13 +1554,14 @@ function update(dt) {
     if (c.state === 'queue') { const i = q.indexOf(c), tx = SLOT_X[Math.min(i, 2)];
       if (c.y > LANE - 1 && Math.abs(c.x - tx) > .5) moveToward(c, tx, LANE, step);
       else c.arrived = moveToward(c, tx, SLOT_Y, step) && i < 3;
-      if (c.arrived) { c.patience -= dt * (i === 0 ? 1 : .5);
+      if (c.arrived && TUT.active && TUT.step === 0) tutEvent('arrived');
+      if (c.arrived && !TUT.active) { c.patience -= dt * (i === 0 ? 1 : .5);
         if (c.patience <= 0) { leave(c, '😠'); S.day.lost++; P.rep = Math.max(1, P.rep - .12); sfx.bad();
           $('reaction').innerHTML = `<b>☆☆☆</b> ${short(c.ch.name)}: “Çok bekledim, gidiyorum!”`; } }
     } else if (c.state === 'toSeat' || c.state === 'leave') {
       if (c.path && c.path.length) { if (moveToward(c, c.path[0].x, c.path[0].y, step * (c.state === 'leave' ? 1.1 : 1))) c.path.shift(); }
       if (!c.path || !c.path.length) { if (c.state === 'toSeat') { c.state = 'eat'; c.eat = rnd(35, 55); c.moving = false; } else c.dead = true; }
-    } else if (c.state === 'eat') { c.eat -= gdt * MIN_PER_SEC;
+    } else if (c.state === 'eat') { c.eat -= gdt * pace().min;
       if (Math.random() < dt * .15 && !(c.bubble && c.bubble.t > 0)) c.bubble = { text: pick(['😋', '☕', '🥪', '✨']), t: 1.5 };
       if (c.eat <= 0) { c.seat.occ = null; c.state = 'leave'; c.path = [{ x: c.x, y: LANE }, { x: -20, y: LANE }]; } }
   });
@@ -1439,7 +1570,7 @@ function update(dt) {
 }
 
 // ================= ÇİZİM =================
-function sceneState() { return { brk: S.brk, minutes: S.minutes, weather: S.weather, decor: new Set(P.decor), equip: new Set(P.equip), closing: S.closing, toasting: S.sw.toasting, birds: S.birds }; }
+function sceneState() { return { shopName: (P.shopName || 'Umut Sandviç Evi').toLocaleUpperCase('tr-TR'), brk: S.brk, minutes: S.minutes, weather: S.weather, decor: new Set(P.decor), equip: new Set(P.equip), closing: S.closing, toasting: S.sw.toasting, birds: S.birds }; }
 function render() {
   g.setTransform(4, 0, 0, 4, 0, 0);
   const st = sceneState();
@@ -1478,14 +1609,14 @@ const iconCache = {};
 const ic = id => { const c = A.icon(id); return c; };
 function buildCatTabs() {
   const el = $('catTabs'); el.innerHTML = '';
-  [...CATS, { id: 'menu', name: 'Menü', emo: '📖' }].forEach(c => {
+  [...CATS.filter(c => !c.needs || has(c.needs, 'equip')), { id: 'menu', name: 'Menü', emo: '📖' }].forEach(c => {
     const b = document.createElement('button'); b.dataset.cat = c.id;
     b.innerHTML = `${c.emo} ${c.name}`;
     const n = c.id !== 'menu' && c.id !== 'ekmek' ? S.sw.fills.filter(f => ING[f].cat === c.id).length : 0;
     if (n) b.innerHTML += `<span class="dot">${n}</span>`;
-    if (c.id === 'ekmek' && S.sw.bread) b.innerHTML += '<span class="dot">✓</span>';
+    if ((c.id === 'ekmek' && S.sw.bread) || (c.id === 'icecek' && S.sw.drink)) b.innerHTML += '<span class="dot">✓</span>';
     b.classList.toggle('on', S.catTab === c.id);
-    b.onclick = () => { S.catTab = c.id; sfx.click(); refreshBoard(); };
+    b.onclick = () => { S.catTab = c.id; sfx.click(); refreshBoard(); if (TUT.active) tutEvent('tab'); };
     el.append(b);
   });
 }
@@ -1500,7 +1631,12 @@ function buildCatPanel() {
     const addRec = (r, sig) => { const ok = (!r.bread || u.has(r.bread)) && r.items.every(i => u.has(i));
       const d = document.createElement('button'); d.className = 'rec' + (ok ? '' : ' lock'); d.style.cssText = 'text-align:left;font-family:VT323;box-shadow:none;width:100%';
       d.innerHTML = `<b${sig ? ' class="sig"' : ''}>${ok ? (sig ? '✨ ' : '') : '🔒 '}${r.name}</b> <span style="float:right">₺${r.price}</span><br>${fmt(r)}`;
-      d.disabled = !ok || busy || !S.running; d.onclick = () => applyRecipe(r); box.append(d); };
+      if (ok) { d.style.borderLeft = '6px solid #5bbf4a'; d.innerHTML += '<span style="float:right;font-size:14px;color:#3f8f6a">👆 dokun</span>'; }
+      d.onclick = () => { if (!S.running) return;
+        if (!ok) { const miss = [r.bread, ...r.items].filter(i => i && !u.has(i)).map(i => ING[i].name);
+          toast(`🔒 ${r.name} için önce şunları açmalısın: ${miss.join(', ')} (gün sonunda Dükkân’dan)`, 3200); sfx.bad(); return; }
+        applyRecipe(r); };
+      box.append(d); };
     P.sigs.forEach(r => addRec(r, true));
     Object.values(RECIPES).forEach(r => addRec(r, false));
     el.append(box); return;
@@ -1512,21 +1648,24 @@ function buildCatPanel() {
     b.append(ic(id));
     const s = document.createElement('span'); s.textContent = it.name; b.append(s);
     const pr = document.createElement('span'); pr.className = 'pr'; pr.textContent = locked ? `🔒 ₺${it.cost}` : `₺${it.price}`; b.append(pr);
-    if (S.catTab === 'ekmek') { b.classList.toggle('sel', sw.bread === id); b.disabled = locked || busy || sw.toasted; b.onclick = () => { sw.bread = id; sfx.click(); refreshBoard(); }; }
+    if (S.catTab === 'icecek') { b.classList.toggle('sel', sw.drink === id); b.disabled = locked;
+      b.onclick = () => { sw.drink = sw.drink === id ? null : id; sfx.click(); refreshBoard(); if (TUT.active) tutEvent('drink'); }; }
+    else if (S.catTab === 'ekmek') { b.classList.toggle('sel', sw.bread === id); b.disabled = locked || busy || sw.toasted; b.onclick = () => { sw.bread = id; sfx.click(); refreshBoard(); if (TUT.active) tutEvent('bread'); }; }
     else { const n = sw.fills.filter(f => f === id).length; if (n) { const cn = document.createElement('span'); cn.className = 'cnt'; cn.textContent = '×' + n; b.append(cn); }
       b.disabled = locked || busy || !sw.bread || sw.fills.length >= maxFills() || sw.toasted;
-      b.onclick = () => { if (!sw.bread) return; sw.fills.push(id); sfx.click(); refreshBoard(); }; }
+      b.onclick = () => { if (!sw.bread) return; sw.fills.push(id); sfx.click(); refreshBoard(); if (TUT.active) tutEvent('fill'); }; }
     if (locked) b.title = 'Gün sonunda dükkândan açabilirsin';
     grid.append(b);
   });
   el.append(grid);
-  if (S.catTab !== 'ekmek' && !sw.bread) { const p = document.createElement('div'); p.style.cssText = 'font-size:17px;color:#7a5a40;margin-top:6px'; p.textContent = 'Önce Ekmek sekmesinden bir ekmek seç.'; el.append(p); }
+  if (S.catTab === 'icecek') { const p = document.createElement('div'); p.style.cssText = 'font-size:16px;color:#7a5a40;margin-top:6px'; p.textContent = '🥤 Bir içecek seç (isteğe bağlı). Ruh hâline uyan içecek bahşişi ve yıldızı artırır.'; el.append(p); }
+  else if (S.catTab !== 'ekmek' && !sw.bread) { const p = document.createElement('div'); p.style.cssText = 'font-size:17px;color:#7a5a40;margin-top:6px'; p.textContent = 'Önce Ekmek sekmesinden bir ekmek seç.'; el.append(p); }
 }
 function applyRecipe(r) {
-  if (S.sw.toasting > 0 || !S.running) return;
+  if (!S.running) return;
   const u = unl();
   const bread = r.bread || (S.sw.bread && u.has(S.sw.bread) ? S.sw.bread : (u.has('somun') ? 'somun' : BREADS_FALLBACK()));
-  S.sw = { bread, fills: r.items.filter(i => u.has(i)).slice(0, maxFills()), toasted: false, toasting: 0 };
+  S.sw = { bread, fills: r.items.filter(i => u.has(i)).slice(0, maxFills()), toasted: false, toasting: 0, drink: S.sw.drink || null };
   sfx.buy();
   if (r.toast) { S.sw.toasting = toastTime(); beep(300, .3, 'sawtooth', .03, 260); toast(`📖 ${r.name} dizildi, tost makinesinde 🔥`); }
   else toast(`📖 ${r.name} dizildi!`);
@@ -1535,15 +1674,15 @@ function applyRecipe(r) {
 const BREADS_FALLBACK = () => Object.keys(ING).find(k => ING[k].bread && unl().has(k));
 function refreshBoard() {
   const sw = S.sw, busy = sw.toasting > 0;
-  $('sandLabel').textContent = !sw.bread ? 'Önce bir ekmek seç.' : (sw.toasted ? '🔥 ' : '🥪 ') + ING[sw.bread].name + (sw.fills.length ? ' + ' + sw.fills.map(f => ING[f].name).join(', ') : ' (boş)');
+  $('sandLabel').textContent = (!sw.bread ? 'Önce bir ekmek seç.' : (sw.toasted ? '🔥 ' : '🥪 ') + ING[sw.bread].name + (sw.fills.length ? ' + ' + sw.fills.map(f => ING[f].name).join(', ') : ' (boş)')) + (sw.drink ? ' · 🥤 ' + ING[sw.drink].name : '');
   $('sandPrice').textContent = sw.bread ? `₺${sandwichSummary().price} · ${sw.fills.length}/${maxFills()}` : '';
   $('toastBtn').disabled = busy || !sw.bread || sw.toasted || !S.running;
-  $('undoBtn').disabled = busy || !sw.bread; $('clearBtn').disabled = busy || !sw.bread;
+  $('undoBtn').disabled = busy || (!sw.bread && !sw.drink); $('clearBtn').disabled = busy || (!sw.bread && !sw.drink);
   $('serveBtn').disabled = busy || !sw.bread || !S.running;
   if (S.kitchen) { buildCatTabs(); buildCatPanel(); }
 }
-$('undoBtn').onclick = () => { const sw = S.sw; if (sw.toasted) sw.toasted = false; else if (sw.fills.length) sw.fills.pop(); else sw.bread = null; sfx.click(); refreshBoard(); };
-$('clearBtn').onclick = () => { S.sw = { bread: null, fills: [], toasted: false, toasting: 0 }; S.catTab = 'ekmek'; sfx.click(); refreshBoard(); };
+$('undoBtn').onclick = () => { const sw = S.sw; if (sw.toasted) sw.toasted = false; else if (sw.fills.length) sw.fills.pop(); else if (sw.drink) sw.drink = null; else sw.bread = null; sfx.click(); refreshBoard(); };
+$('clearBtn').onclick = () => { S.sw = { bread: null, fills: [], toasted: false, toasting: 0, drink: null }; S.catTab = 'ekmek'; sfx.click(); refreshBoard(); };
 $('toastBtn').onclick = () => { if (!S.sw.bread) return; S.sw.toasting = toastTime(); beep(300, .3, 'sawtooth', .03, 260); refreshBoard(); };
 $('serveBtn').onclick = serve;
 
@@ -1552,9 +1691,9 @@ function openKitchen() {
   if (S.brk) { toast('Moladasın 🪧 Önce “Dükkâna dön”e bas.'); return; }
   S.kitchen = true; $('kitchen').classList.remove('hidden'); $('backdrop').classList.remove('hidden');
   if (!S.sw.bread) S.catTab = 'ekmek';
-  syncKitchenOrder(true); refreshBoard(); sfx.page();
+  syncKitchenOrder(true); refreshBoard(); sfx.page(); positionKitchen(); if (TUT.active) tutEvent('kitchen');
 }
-function closeKitchen() { S.kitchen = false; $('kitchen').classList.add('hidden'); $('backdrop').classList.add('hidden'); }
+function closeKitchen() { document.body.classList.remove('kopen'); S.kitchen = false; $('kitchen').classList.add('hidden'); $('backdrop').classList.add('hidden'); }
 $('openK').onclick = () => S.brk ? endBreak(true) : openKitchen(); $('closeK').onclick = closeKitchen; $('backdrop').onclick = closeKitchen;
 
 function bookLine(c) {
@@ -1563,10 +1702,12 @@ function bookLine(c) {
   if (!b || (b.visits <= 1 && !b.likes.length && !b.dislikes.length)) return '📒 İlk kez geliyor, dikkatle dinle!';
   const L = b.likes.map(i => ING[i].name), D = b.dislikes.map(i => ING[i].name);
   let s = `📒 ${b.visits}. ziyaret · ❤ ${L.length ? L.join(', ') : '?'} · ✖ ${D.length ? D.join(', ') : '?'}`;
-  if (c.order.kind === 'mood' && P.guide[c.order.mood]) s += `\n📘 ${MOODS[c.order.mood].guide}`;
+  if (c.order.kind === 'mood' && P.guide[c.order.mood]) { const M = MOODS[c.order.mood]; s += `\n📘 ${M.guide}`;
+    if (M.drink && has('dolap', 'equip')) s += ` · 🥤 ${M.drink.want.map(t => DTAG_TR[t] || t).join(' ya da ')} bir içecek`; }
   return s;
 }
 let kOrderId = null;
+const DTAG_TR = { sicak: 'sıcak', soguk: 'soğuk', tatli: 'tatlı', gazli: 'gazlı', kafein: 'uyandıran', hafif: 'hafif', ferah: 'ferah', nostaljik: 'eski usul', cesur: 'değişik', ucuz: 'ucuz', ayran: 'köpüklü beyaz', kahvalti: 'kahvaltılık' };
 function moodTag(c) { return c.order.kind === 'menu' ? (c.order.sig ? '✨ İmza tarif' : '📋 Menüden') : MOODS[c.order.mood].emo + ' ' + MOODS[c.order.mood].label; }
 function syncKitchenOrder(force) {
   const c = queueList()[0], id = c && c.arrived ? c.id : null;
@@ -1606,6 +1747,7 @@ function syncUI() {
   $('openK').classList.toggle('pulse', !!id && !S.kitchen);
   const setBar = el => { if (id) { const k = Math.max(0, c.patience / c.maxP); el.style.width = (k * 100) + '%'; el.style.background = k > .5 ? '#5bbf4a' : k > .25 ? '#f1c40f' : '#e74c3c'; } else el.style.width = '0%'; };
   setBar($('patFill')); if (S.kitchen) { setBar($('kPat')); syncKitchenOrder(false); A.drawStack($('stack'), S.sw, 3); if (S.sw.toasting > 0) drawToastBar(); }
+  tutTick();
   $('queueInfo').textContent = q.length > 1 ? `Sırada ${q.length - 1} kişi daha bekliyor` : '';
   $('fastHint').style.display = (S.running && !S.closing && !S.brk && !q.length && S.speed < 4 && S.speed > 0) ? 'block' : 'none';
 }
@@ -1621,14 +1763,22 @@ function rollWeather() {
   if (P.day === 1) return 'gunesli';
   return wpick([['gunesli', 3], ['bulutlu', 2], ['yagmurlu', 2], ['karli', 1], ['sicak', 1.5]]);
 }
+function applyShopName() {
+  const n = P.shopName || 'Umut Sandviç Evi';
+  $('shopTitle').textContent = n.toLocaleUpperCase('tr-TR'); document.title = n;
+}
 function startDay() {
+  applyShopName();
   S.weather = P.nextWeather || rollWeather(); P.nextWeather = null;
   S.minutes = OPEN; S.closing = false; S.ended = false; S.criticCame = false; S.nextSpawn = OPEN + 6; S.customers = []; S.lastChar = null;
   S.day = { money: 0, served: 0, stars: 0, lost: 0, pets: 0, learned: 0, best: null, creations: [] };
   S.tables = has('masa', 'equip') ? [40, 120, 200, 280] : [52, 160, 268];
   S.seats = []; S.tables.forEach(t => S.seats.push({ x: t - 13, y: 163, occ: null, t }, { x: t + 13, y: 163, occ: null, t }));
-  S.sw = { bread: null, fills: [], toasted: false, toasting: 0 }; S.catTab = 'ekmek';
+  S.sw = { bread: null, fills: [], toasted: false, toasting: 0, drink: null }; S.catTab = 'ekmek';
   $('reaction').innerHTML = ''; lastKey = -1; S.running = true; refreshBoard(); sfx.bell();
+  if (P.tutorialDone === false) { startTutorial(); return; }
+  if (P.day === 8) setTimeout(() => toast('📅 2. hafta! Dükkân tanınıyor, gün biraz daha hızlı akacak.', 3200), 2600);
+  if (P.day === 15) setTimeout(() => toast('🏅 Artık gerçek bir ustasın: normal tempo başladı!', 3200), 2600);
   toast(`${P.day}. gün · ${weekday()} · ${WEATHER[S.weather].emo} ${WEATHER[S.weather].name}`, 2400); S.brk = null; S.fridayHint = false;
 }
 function endDay() {
@@ -1684,9 +1834,10 @@ function renderShop() {
     d.append(ico, t, btn); grid.append(d);
   };
   if (shopTab === 'malzeme') {
-    CATS.forEach(c => { Object.entries(ING).filter(([, it]) => it.cat === c.id && it.cost > 0).forEach(([id, it]) => {
+    if (!has('dolap', 'equip')) { const n = document.createElement('p'); n.textContent = '🧊 İçecekleri satmak için önce 🛠 Ekipman’dan İçecek dolabı al.'; panel.append(n); }
+    CATS.filter(c => !c.needs || has(c.needs, 'equip')).forEach(c => { Object.entries(ING).filter(([, it]) => it.cat === c.id && it.cost > 0).forEach(([id, it]) => {
       const used = Object.values(RECIPES).filter(r => r.items.includes(id) || r.bread === id).map(r => r.name);
-      item(A.icon(id), `${c.emo} ${it.name}`, used.length ? `Menüde: ${used.slice(0, 2).join(', ')}` : 'Yeni lezzet seçeneği', it.cost, P.unlocked.includes(id), () => P.unlocked.push(id)); }); });
+      item(A.icon(id), `${c.emo} ${it.name}`, used.length ? `Menüde: ${used.slice(0, 2).join(', ')}` : (c.id === 'icecek' ? (it.dtags.includes('nostaljik') ? 'Eski usul bir tat' : 'Günümüzün sevilen içeceği') : 'Yeni lezzet seçeneği'), it.cost, P.unlocked.includes(id), () => P.unlocked.push(id)); }); });
   } else if (shopTab === 'ekipman') {
     Object.entries(EQUIP).forEach(([id, e]) => item(e.emo, e.name, e.desc, e.cost, P.equip.includes(id), () => P.equip.push(id)));
   } else {
@@ -1694,6 +1845,67 @@ function renderShop() {
   }
   panel.append(grid);
 }
+
+// ================= EĞİTİM =================
+const TUT = { active: false, step: 0 };
+const TUT_STEPS = [
+  { text: '👋 Hoş geldin usta! Burası senin dükkânın. İlk müşterin geliyor, biraz bekle…', target: '#stage' },
+  { text: '🗣️ Müşteriler ne istediklerini söylemez, durumlarını anlatır. Aşağıdaki <b>Sipariş</b> kartında Hüseyin Abi’nin ne dediğini oku, sonra <b>🥪 Tezgâha geç</b>’e dokun.', target: '#openK' },
+  { text: '🍞 Önce bir <b>ekmek</b> seç. Hangisi olursa olur!', target: '#catPanel' },
+  { text: '🥩 Şimdi <b>Et & Protein</b> sekmesine geç ve <b>Sucuk</b> ekle. Hüseyin Abi sucuğa bayılır.', target: '#catTabs', wait: 'fill' },
+  { text: '🔥 Hüseyin Abi üşümüş, sıcak bir şey iyi gelir: <b>Tost makinesine bas</b>.', target: '#toastBtn' },
+  { text: '✅ Tost hazır! Şimdi <b>Servis et</b>.', target: '#serveBtn' },
+  { text: '🎉 Harika! Memnun müşteri para ve bahşiş bırakır. Kimin neyi sevdiğini <b>📒 Defter</b> hatırlar. Sıra boşken günü <b>2x / 4x</b> hızlandırabilirsin. İlk haftalar sakin geçer, acele etme 🙂', target: null, last: true },
+];
+function startTutorial() {
+  TUT.active = true; TUT.step = 0; TUT.served = false; S.minutes = OPEN;
+  const ch = CHARS.huseyin;
+  P.book.huseyin = P.book.huseyin || { visits: 0, likes: [], dislikes: [] }; P.book.huseyin.visits++;
+  S.customers.push({ id: ++S.uid, cid: 'huseyin', ch, order: { kind: 'mood', mood: 'usumus' }, look: ch.look, x: 215, y: LANE, state: 'queue', arrived: false,
+    hint: 'Selamün aleyküm usta! Dışarısı buz gibi, ellerim dondu… İçimi ısıtacak bir şey yap bana.', patience: 999, maxP: 999, frame: 0, wt: 0, moving: false, path: null, bubble: null, eat: 0 });
+  showTut();
+}
+function showTut() {
+  document.querySelectorAll('.tut-hl').forEach(e => e.classList.remove('tut-hl'));
+  const st = TUT_STEPS[TUT.step], box = $('tutBox');
+  box.classList.remove('hidden');
+  $('tutText').innerHTML = `<small>${TUT.step + 1}/${TUT_STEPS.length}</small> ${st.text}`;
+  $('tutNext').classList.toggle('hidden', !st.last);
+  $('tutSkip').classList.toggle('hidden', !!st.last);
+  if (st.target) { const el = document.querySelector(st.target); if (el) el.classList.add('tut-hl'); }
+  if (TUT.step === 2 && S.kitchen) S.catTab = 'ekmek', refreshBoard();
+}
+function tutEvent(ev) { if (ev === 'served') TUT.served = true; }
+let tutWait = 0;
+function tutTick() {
+  if (!TUT.active || tutWait > performance.now()) return;
+  const c = S.customers.find(x => x.cid === 'huseyin'), sw = S.sw;
+  const done = [() => c && c.arrived, () => S.kitchen || TUT.served, () => sw.bread || TUT.served, () => sw.fills.length > 0 || TUT.served,
+    () => sw.toasted || TUT.served, () => TUT.served, () => false][TUT.step];
+  if (done && done()) { TUT.step++; tutWait = performance.now() + (TUT.step === 6 ? 1200 : 200); setTimeout(showTut, TUT.step === 6 ? 1200 : 200); }
+}
+function endTutorial(skipped) {
+  TUT.active = false; P.tutorialDone = true; $('tutBox').classList.add('hidden');
+  document.querySelectorAll('.tut-hl').forEach(e => e.classList.remove('tut-hl'));
+  S.customers.forEach(c => { if (c.patience > 900) { c.patience = c.maxP = 60; } });
+  S.nextSpawn = S.minutes + 6; doSave();
+  toast(skipped ? 'Eğitim geçildi. Kolay gelsin usta!' : `☀️ ${P.day}. gün başladı, kolay gelsin!`, 2400);
+}
+$('tutNext').onclick = () => endTutorial(false);
+$('tutSkip').onclick = () => endTutorial(true);
+
+// ================= MOBİL: tezgâh sahnenin altında açılsın =================
+const portraitPhone = () => window.matchMedia('(max-width: 720px) and (orientation: portrait)').matches;
+function positionKitchen() {
+  const k = $('kitchen'), bd = $('backdrop');
+  if (S.kitchen && portraitPhone()) {
+    document.body.classList.add('kopen'); k.scrollTop = 0;
+    const st = $('stage'); if (st.getBoundingClientRect().top > 1) window.scrollTo(0, window.scrollY + st.getBoundingClientRect().top);
+    const top = Math.max(0, Math.round($('stage').getBoundingClientRect().bottom));
+    k.style.top = top + 'px'; k.style.maxHeight = 'none'; bd.style.top = top + 'px'; document.body.classList.add('kopen');
+  } else { k.style.top = ''; k.style.maxHeight = ''; bd.style.top = ''; }
+}
+window.addEventListener('resize', positionKitchen); window.addEventListener('orientationchange', () => setTimeout(positionKitchen, 300));
 
 // ================= MOLA =================
 const NOTES = [['🕌', 'Cumaya gittim, geleceğim'], ['🎒', 'Kızımın veli toplantısı var, geleceğim'], ['🐈', 'Pamuk’u aşıya götürdüm, miyavlayarak döneceğiz!']];
@@ -1776,7 +1988,8 @@ function openSettings() {
   $('exportBox').value = Save.exportCode(P); $('resetBtn').dataset.sure = '';
   $('resetBtn').textContent = '🗑 Sıfırdan başla';
 }
-$('setBtn').onclick = openSettings; $('setClose').onclick = () => $('setModal').classList.add('hidden');
+$('setBtn').onclick = () => { openSettings(); $('shopNameEdit').value = P.shopName || 'Umut Sandviç Evi'; };
+$('shopNameSave').onclick = () => { const v = $('shopNameEdit').value.trim().slice(0, 22); if (!v) return; P.shopName = v; applyShopName(); doSave(); toast(`🪧 Yeni tabela asıldı: ${v}`); }; $('setClose').onclick = () => $('setModal').classList.add('hidden');
 $('copyBtn').onclick = async () => { try { await navigator.clipboard.writeText($('exportBox').value); toast('Yedek kodu kopyalandı 📋'); } catch (e) { $('exportBox').select(); toast('Kod seçildi, kopyalayabilirsin.'); } };
 $('importBtn').onclick = () => { const s = Save.importCode($('importBox').value); if (!s) { toast('Kod geçersiz 😕'); return; }
   P = Object.assign(newProfile(), s); doSave(); $('setModal').classList.add('hidden'); toast(`Yedek yüklendi: ${P.day}. gün`); S.running = false; startDay(); };
@@ -1807,7 +2020,7 @@ async function boot() {
   const players = await Save.listPlayers();
   $('startStatus').textContent = (Save.mode === 'cloud' ? '☁ Kayıtlar Claude hesabına yapılıyor.' : '💾 Kayıtlar bu cihazın tarayıcısında tutuluyor.') + (players.length ? ' Kaydını seç ya da yeni oyuncu ekle.' : ' Adını yaz ve başla!');
   const list = $('playerList'); list.innerHTML = '';
-  const begin = (name, state) => { initAudio(); Save.setPlayer(name); P = state ? Object.assign(newProfile(), state) : newProfile();
+  const begin = (name, state) => { initAudio(); Save.setPlayer(name); P = state ? Object.assign(newProfile(), state) : Object.assign(newProfile(), { tutorialDone: false, shopName: ($('newShop').value.trim() || 'Umut Sandviç Evi').slice(0, 22) });
     $('sPlayer').textContent = Save.playerName; $('startModal').classList.add('hidden'); doSave(); startDay(); };
   players.forEach(pl => { const d = document.createElement('button'); d.className = 'person'; d.style.cssText = 'text-align:left;cursor:pointer';
     d.innerHTML = `<div style="font-size:26px">🧑‍🍳</div><div><b>${pl.name.replace(/[<>&]/g, '')}</b><br>${pl.day}. gün · ₺${pl.money}<br><small>${new Date(pl.savedAt).toLocaleDateString('tr-TR')}</small></div>`;
